@@ -200,6 +200,40 @@ df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFacto
                          T ~ "Lyon"))
 ```
 
+```{r stack all}
+
+date_min <- dmy("01-01-2020")
+date_max <- dmy("01-01-2021")
+
+df_chla <- df_chla %>% 
+  dplyr::filter(Date >= min(df_HF$Date), 
+                Date <= max(df_HF$Date))
+
+df <- df_chla %>%
+  left_join(df_SST,  by = c("Box", "Date")) %>%
+  left_join(df_SSS,  by = c("Box", "Date")) %>%
+  left_join(df_PO4,  by = c("Box", "Date")) %>%
+  left_join(df_NO3,  by = c("Box", "Date")) %>%
+  left_join(df_NH4,  by = c("Box", "Date")) %>%
+  left_join(df_MLD,  by = c("Box", "Date")) %>%
+  left_join(df_HF,   by = c("Box", "Date")) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value")
+
+
+df %>% 
+  dplyr::filter(Date >= date_min, 
+                Date <= date_max) %>% 
+  ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
+  geom_point()+
+  geom_line()+
+  # geom_smooth(method = "gam")+
+  facet_wrap(~Metric,scales = "free")+
+  theme_bw()
+
+
+```
+
+
 
 
 
