@@ -1,0 +1,206 @@
+---
+title: "GAM of MedSea variables to model chlorophyll-a"
+author: "Simon Oiry"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+
+```{r Open Chlorophyll}
+
+# Read in
+df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = case_when(str_detect(metric,"GEOM") ~ "GeoMean_Chla",
+                            T ~ "STD_Chla")) %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+
+df_chla
+
+```
+
+```{r Open HF}
+
+df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_HF_Lyon <- read.csv("Data/Variables_values/Monthly_HF_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_HF_Chipre <- read.csv("Data/Variables_values/Monthly_HF_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_HF <- rbind(df_HF_Adriatic,df_HF_Lyon,df_HF_Chipre)
+
+rm(df_HF_Adriatic)
+rm(df_HF_Lyon)
+rm(df_HF_Chipre)
+
+
+```
+
+```{r Open MLD}
+
+df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_MLD <- rbind(df_MLD_Adriatic,df_MLD_Lyon,df_MLD_Chipre)
+
+rm(df_MLD_Adriatic)
+rm(df_MLD_Lyon)
+rm(df_MLD_Chipre)
+
+```
+
+```{r Open NH4}
+
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NH4 <- rbind(df_NH4_Adriatic,df_NH4_Lyon,df_NH4_Chipre)
+
+rm(df_NH4_Adriatic)
+rm(df_NH4_Lyon)
+rm(df_NH4_Chipre)
+
+```
+
+```{r Open NO3}
+
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
+
+rm(df_NO3_Adriatic)
+rm(df_NO3_Lyon)
+rm(df_NO3_Chipre)
+
+```
+
+```{r Open PO4}
+
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_PO4 <- rbind(df_PO4_Adriatic,df_PO4_Lyon,df_PO4_Chipre)
+
+rm(df_PO4_Adriatic)
+rm(df_PO4_Lyon)
+rm(df_PO4_Chipre)
+
+```
+
+```{r Open SSS}
+
+df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_SSS <- rbind(df_SSS_Adriatic,df_SSS_Lyon,df_SSS_Chipre)
+
+rm(df_SSS_Adriatic)
+rm(df_SSS_Lyon)
+rm(df_SSS_Chipre)
+
+```
+
+```{r Open SST}
+
+
+df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = "SST") %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+```
+
+
+
+
+
