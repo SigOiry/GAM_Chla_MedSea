@@ -16,7 +16,6 @@ library(dplyr)
 library(Utilities.Package)
 ```
 
-
 ```{r Open Chlorophyll}
 
 # Read in
@@ -227,8 +226,8 @@ df <- df_chla %>%
 write.csv(df,"Data/df.all.csv", row.names = F)
 
 df %>% 
-  dplyr::filter(Date >= date_min, 
-                Date <= date_max) %>% 
+  # dplyr::filter(Date >= date_min, 
+                # Date <= date_max) %>% 
   ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
   geom_point()+
   geom_line()+
@@ -238,6 +237,9 @@ df %>%
 
 df_wide <- df %>% 
   pivot_wider(names_from = Metric,values_from = Value)
+
+pairs(df_wide %>% dplyr::select(-Box))
+
 
 ```
 
@@ -249,8 +251,11 @@ fit <- brm(
     s(NO3, by = Box) + s(NH4, by = Box) + s(MLD, by = Box) +
     s(HF, by = Box) + (1 | Box),
   data = df_wide,
-  family = gaussian(),
-  chains = 4, cores = 16
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 1000,
+  warmup = 100,
+  file = "Data/Model/Chla_GAM_all_1000"
 )
 
 summary(fit)
@@ -303,17 +308,16 @@ df_wide_std <- df_wide %>%
                 .names = "{.col}_z"))
 
 fit <- brm(
-  formula = GeoMean_Chla + 1 ~ 
+  formula = GeoMean_Chla ~ 
     s(SST_z, by = Box) + s(SSS_z, by = Box) + s(PO4_z, by = Box) +
     s(NO3_z, by = Box) + s(NH4_z, by = Box) + s(MLD_z, by = Box) +
     s(HF_z, by = Box) + (1 | Box),
   data = df_wide_std,
   family = Gamma(link = "log"),
-  chains = 4, cores = 16,
-  iter = 1000,
-  warmup = 100,
-  file = "Data/Model/Chla_GAM_all_STD_1000_plus1"
-    
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  file = "Data/Model/Chla_GAM_all_STD_10000"
 )
 
 summary(fit)
@@ -374,7 +378,6 @@ plots <- lapply(names(smooths_by_var_native), function(varname) {
 for (p in plots) print(p)
 ```
 
-
 ```{r Pred all}
 
 preds_all <- fitted(
@@ -421,14 +424,223 @@ ggplot() +
 
 ```
 
+```{r model Adriatic}
+library(tidybayes)
+
+df_wide_adriatic <- df_wide %>% 
+  dplyr::filter(Box == "Adriatic")
+
+df_wide_adriatic_STD <- df_wide_adriatic %>% 
+  mutate(across(c(SST, SSS, PO4, NO3, NH4, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+fit_adriatic <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(PO4) +
+    s(NO3) + s(NH4) + s(MLD) +
+    s(HF),
+  data = df_wide_adriatic_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 1000,
+  warmup = 100,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_1000_adriatic_log_adapt_delta_97_tree_15_STD"
+)
 
 
+# plot(fit_adriatic)
+summary(fit_adriatic)
+
+plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
 
 
+```{r model Cyprus}
+
+df_wide_Cyprus <- df_wide %>% 
+  dplyr::filter(Box == "Cyprus")
+
+df_wide_Cyprus_STD <- df_wide_Cyprus %>% 
+  mutate(across(c(SST, SSS, PO4, NO3, NH4, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+fit_Cyprus <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(PO4) +
+    s(NO3) + s(NH4) + s(MLD) +
+    s(HF),
+  data = df_wide_Cyprus_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 1000,
+  warmup = 100,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_1000_Cyprus_log_adapt_delta_97_tree_15_STD"
+)
 
 
+# plot(fit_adriatic)
+summary(fit_Cyprus)
+
+plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
+
+```{r model Lyon}
+
+df_wide_Lyon <- df_wide %>% 
+  dplyr::filter(Box == "Lyon")
+
+df_wide_Lyon_STD <- df_wide_Lyon %>% 
+  mutate(across(c(SST, SSS, PO4, NO3, NH4, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+pairs(df_wide_Lyon_STD %>% dplyr::select(-Box))
+
+fit_Lyon <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(PO4) +
+    s(NO3) + s(NH4) + s(MLD) +
+    s(HF),
+  data = df_wide_Lyon_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_STD"
+)
 
 
+# plot(fit_adriatic)
+summary(fit_Lyon)
+
+plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
+
+```{r model Lyon Cleaned}
+
+df_wide_Lyon <- df_wide %>% 
+  dplyr::filter(Box == "Lyon") %>% 
+  mutate(
+    DIN  = NO3 + NH4,                    
+    N_P  = DIN / PO4,                    
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4
+  ) %>% 
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_Lyon_STD <- df_wide_Lyon %>% 
+  mutate(across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+pairs(df_wide_Lyon_STD %>% dplyr::select(-Box))
 
 
+fit_Lyon <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(N_P) +
+    s(sum_Nutri) + s(MLD) +
+    s(HF),
+  data = df_wide_Lyon_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD"
+)
+
+
+# plot(fit_adriatic)
+summary(fit_Lyon)
+
+# plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
+
+```{r model Adriatic Cleaned}
+
+df_wide_Adriatic <- df_wide %>% 
+  dplyr::filter(Box == "Adriatic") %>% 
+  mutate(
+    DIN  = NO3 + NH4,                    
+    N_P  = DIN / PO4,                    
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4
+  ) %>% 
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_Adriatic_STD <- df_wide_Adriatic %>% 
+  mutate(across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+pairs(df_wide_Adriatic_STD %>% dplyr::select(-Box))
+
+
+fit_Adriatic <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(N_P) +
+    s(sum_Nutri) + s(MLD) +
+    s(HF),
+  data = df_wide_Adriatic_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Adriatic_log_adapt_delta_97_tree_15_Cleaned_STD"
+)
+
+
+# plot(fit_adriatic)
+summary(fit_Adriatic)
+
+# plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
+
+```{r model Cyprus Cleaned}
+
+df_wide_Cyprus <- df_wide %>% 
+  dplyr::filter(Box == "Cyprus") %>% 
+  mutate(
+    DIN  = NO3 + NH4,                    
+    N_P  = DIN / PO4,                    
+    log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4
+  ) %>% 
+  dplyr::select(-c(PO4,NO3,NH4,log_N_P,DIN))
+
+df_wide_Cyprus_STD <- df_wide_Cyprus %>% 
+  mutate(across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+pairs(df_wide_Cyprus_STD %>% dplyr::select(-Box))
+
+
+fit_Cyprus <- brm(
+  formula = GeoMean_Chla ~ 
+    s(SST) + s(SSS) + s(N_P) +
+    s(sum_Nutri) + s(MLD) +
+    s(HF),
+  data = df_wide_Cyprus_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Cyprus_log_adapt_delta_97_tree_15_Cleaned_STD"
+)
+
+
+# plot(fit_Cyprus)
+summary(fit_Cyprus)
+
+plot(conditional_smooths(fit_Cyprus), ask = FALSE)
+
+```
 
