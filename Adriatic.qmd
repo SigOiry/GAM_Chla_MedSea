@@ -390,7 +390,7 @@ Adriatic_sum_Nutri <- conditional_effects(
 ggplot(aes(x = (sum_Nutri*sum_Nutri_back_to_raw_Adriatic$sd)+sum_Nutri_back_to_raw_Adriatic$avg, y = estimate__))+
   geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "darkgreen", alpha = 0.1)+
   geom_line(color= "darkgreen")+
-  labs(y = "Chla (mg.m⁻³)",x="Total Nutrients (mmol m⁻³)")+
+  labs(y = "Chla (mg.m⁻³)",x="Total Nutrients (mmol.m-3)")+
   theme_Bede()
 
 
@@ -423,7 +423,7 @@ Adriatic_HF <- conditional_effects(
 ggplot(aes(x = (HF*HF_back_to_raw_Adriatic$sd)+HF_back_to_raw_Adriatic$avg, y = estimate__))+
   geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "orangered", alpha = 0.1)+
   geom_line(color= "orangered")+
-  labs(y = "Chla (mg.m⁻³)",x="Heat Flux (W m⁻²)")+
+  labs(y = "Chla (mg.m⁻³)",x="Heat Flux (W.m-2)")+
   theme_Bede()
 
 
