@@ -275,6 +275,13 @@ df_wide <- df %>%
 
 ```
 
+::: {style="text-align: center; margin-top: 20px;"}
+<button onclick="window.open(&#39;https://github.com/SigOiry/GAM_Chla_MedSea&#39;, &#39;_blank&#39;);" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+
+Visit the Github repository
+</button>
+:::
+
 # Study sites
 
 ```{r leaflet map}
@@ -311,9 +318,9 @@ polygons_lyon <- st_read(shp_lyon, quiet = TRUE)%>%
 polygons <- rbind(polygons_lyon,polygons_cyprus,polygons_adri)
 
 polygons$wiki_url <- c(
-  Adriatic = "https://en.wikipedia.org/wiki/Adriatic_Sea",
-  Cyprus   = "https://en.wikipedia.org/wiki/Cyprus",
-  Lyon     = "https://en.wikipedia.org/wiki/Lyon"
+  Adriatic = "https://sigoiry.github.io/GAM_Chla_MedSea/Adriatic.html",
+  Cyprus   = "https://sigoiry.github.io/GAM_Chla_MedSea/Cyprus.html",
+  Lyon     = "https://sigoiry.github.io/GAM_Chla_MedSea/Lyon.html"
 )[polygons$Site]
 
 
@@ -422,7 +429,7 @@ m %>%
 
 ```
 
-@fig-map_sites shows the three study sites considered in this work. The first, named Lyon, is located in the Gulf of Lion, between Corsica and Spain. It covers a total area of `r round(polygons$area_km2[polygons$Site == "Lyon"],0)` km². The *Adriatic* region, situated between Italy and Croatia, covers a similar area of `r round(polygons$area_km2[polygons$Site == "Adriatic"],0)` km². The third region, *Cyprus*, is the smallest of the three. It is located south of the island of Cyprus and covers an area of `r round(polygons$area_km2[polygons$Site == "Cyprus"],0)` km².
+@fig-map_sites shows the three study sites considered in this work. The first, named Lyon, is located in the Gulf of Lion, between Corsica and Spain. It covers a total area of `r as.character(round(polygons$area_km2[polygons$Site == "Lyon"],0))` km². The *Adriatic* region, situated between Italy and Croatia, covers a similar area of `r as.character(round(polygons$area_km2[polygons$Site == "Adriatic"],0))` km². The third region, *Cyprus*, is the smallest of the three. It is located south of the island of Cyprus and covers an area of `r as.character(round(polygons$area_km2[polygons$Site == "Cyprus"],0))` km².
 
 # Data investigation
 
@@ -481,7 +488,7 @@ df_wide %>%
   theme(axis.text = element_blank())
 ```
 
-h could inflate parameter uncertainty and obscure the individual ecological effects we aim to quantify. As shown in @fig-pairwise_plot1, PO₄ and NO₃ are almost perfectly correlated (R = 0.997). NO₃ is also strongly correlated with NH₄ (R = 0.77), and PO₄ with NH₄ (R = 0.742). Therefore, individual nutrient concentrations were excluded from the analysis. Instead, we included two derived variables:
+Highly correlated covariates were removed to prevent multicollinearity, which would otherwise inflate parameter uncertainty and obscure the individual ecological effects we aim to quantify. As shown in @fig-pairwise_plot1, PO₄ and NO₃ are almost perfectly correlated (R = 0.997). NO₃ is also strongly correlated with NH₄ (R = 0.77), and PO₄ with NH₄ (R = 0.742). Therefore, individual nutrient concentrations were excluded from the analysis. Instead, we included two derived variables:
 
 $$
 NPratio = (NO3+NH4)/PO4
