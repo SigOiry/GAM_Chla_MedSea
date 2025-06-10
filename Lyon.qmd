@@ -1,0 +1,104 @@
+---
+title: "Gulf of Lyon"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r Model Lyon}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_wide_Lyon <- df_wide %>%
+  dplyr::filter(Box == "Lyon") %>%
+  mutate(
+    DIN  = NO3 + NH4,
+    N_P  = DIN / PO4,
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4
+  ) %>%
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_Lyon_STD <- df_wide_Lyon %>%
+  mutate(across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+# pairs(df_wide_Lyon_STD %>% dplyr::select(-Box))
+
+
+fit_Lyon <- brm(
+  formula = GeoMean_Chla ~
+    s(SST) + s(SSS) + s(N_P) +
+    s(sum_Nutri) + s(MLD) +
+    s(HF),
+  data = df_wide_Lyon_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD"
+)
+
+# plot(fit_adriatic)
+summary(fit_Lyon)
+
+Lyon_sst <- conditional_effects(
+  fit_Lyon,
+  effects = "SST",      
+  prob    = 0.80        
+  # re_formula = NA     
+)
+
+Lyon_sss <- conditional_effects(
+  fit_Lyon,
+  effects = "SSS",      
+  prob    = 0.80        
+  # re_formula = NA     
+)
+
+Lyon_N_P <- conditional_effects(
+  fit_Lyon,
+  effects = "N_P",      
+  prob    = 0.80        
+  # re_formula = NA     
+)
+
+Lyon_sum_Nutri <- conditional_effects(
+  fit_Lyon,
+  effects = "sum_Nutri",
+  prob    = 0.80        
+  # re_formula = NA     
+)
+
+Lyon_MLD <- conditional_effects(
+  fit_Lyon,
+  effects = "MLD",    
+  prob    = 0.80      
+  # re_formula = NA   
+)
+
+Lyon_HF <- conditional_effects(
+  fit_Lyon,
+  effects = "HF",      
+  prob    = 0.80       
+  # re_formula = NA    
+)
+
+
+
+
+
+# conditional_effects(fit_Lyon, effects = "SST:MLD", surface = TRUE)
+
+plot(Lyon_sst, points = TRUE, rug = TRUE, ask = FALSE)
+
+
+
+# plot(conditional_smooths(fit_adriatic), ask = FALSE)
+
+```
+
+
