@@ -5,6 +5,7 @@ editor: visual
 editor_options: 
   chunk_output_type: console
 ---
+
 ```{r library}
 #| cache: false
 #| echo: false
@@ -82,7 +83,8 @@ df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", st
 df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
-  mutate(Box = "Lyon")
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
 
 df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
@@ -249,7 +251,9 @@ df <- df_chla %>%
   left_join(df_NH4,  by = c("Box", "Date")) %>%
   left_join(df_MLD,  by = c("Box", "Date")) %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
-  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value")
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))
 
 
 write.csv(df,"Data/df.all.csv", row.names = F)
@@ -315,7 +319,7 @@ fit_Adriatic <- brm(
   iter = 10000,
   warmup = 1000,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/Chla_GAM_all_10000_Adriatic_log_adapt_delta_97_tree_15_Cleaned_STD"
+  file = "Data/Model/Chla_GAM_all_10000_Adriatic_log_adapt_delta_97_tree_15_Cleaned_STD2"
 )
 
 # plot(fit_adriatic)
@@ -492,8 +496,6 @@ ft
 
 ```
 
-
-
 @tbl-Model_outputs_Adriatic shows that Sea‐surface temperature emerged as the only clearly significant driver of chlorophyll‐a, with the smooth term estimated at –2.72 (95 % CI –5.32 to –0.72), indicating a marked decline in GeoMean_Chl a as temperatures rise. The N : P ratio showed a moderate negative estimate of –1.71, but its 95 % CI (–3.96 to 0.07) just overlaps zero, suggesting a weak downward trend. In contrast, sea‐surface salinity (–0.40; 95 % CI –1.05 to 0.40), total nutrient load (2.65; 95 % CI –2.69 to 8.52), mixed‐layer depth (–0.67; 95 % CI –4.17 to 3.63), and surface heat flux (0.21; 95 % CI –1.14 to 1.72) all produced credible intervals spanning zero, indicating no detectable effect on chlorophyll‐a in this model. The Gamma‐family shape parameter was estimated at 34.84 (95 % CI 29.01 to 41.14).
 
 ```{r overall raw plot}
@@ -508,5 +510,4 @@ ft
 plot_Adriatic
 ```
 
-@fig-Adriatic_Plots displays the posterior mean smooths (solid lines) and their 95 % credible ribbons for each of the six covariates, expressed on the original physical scales. 
-As sea‐surface temperature increases from approximately 15 °C to 27 °C, modeled Chl a falls steeply from about 0.16 mg m⁻³ to 0.07 mg m⁻³, with the greatest sensitivity between 15 and 20 °C before the curve asymptotes at warmer temperatures. Surface heat flux produces a unimodal response: Chl a is lowest (~0.065 mg m⁻³) under strong cooling (–300 W m⁻²), rises to a maximum of roughly 0.09 mg m⁻³ at around –50 W m⁻², then declines again to near 0.085 mg m⁻³ by +200 W m⁻². The N : P ratio effect is characterized by an abrupt drop from about 0.12 mg m⁻³ at low ratios (~20) to 0.08 mg m⁻³ by an N : P of 100, after which Chl a plateaus to approximately 0.09 mg m⁻³ at the highest ratios (~100 to 400). Total nutrient concentration drives a pronounced hump: Chl a increases from ~0.06 mg m⁻³ at minimal loads to ~0.10 mg m⁻³ by 100 mmol m⁻³, peaks near 0.18 mg m⁻³ at 500 mmol m⁻³, and then falls back toward 0.10 mg m⁻³ at 725 mmol m⁻³. Mixed‐layer depth exhibits a U‐shaped trough, with Chl a declining from ~0.11 mg m⁻³ at shallow depths (10 m) to ~0.045 mg m⁻³ by ~150 m before climbing slightly to ~0.05 mg m⁻³ at 500 m. Finally, sea‐surface salinity shows a gentle negative trend, with Chl a decreasing from roughly 0.09 mg m⁻³ at 38.25 ppm to about 0.07 mg m⁻³ at 39.2 ppm.
+@fig-Adriatic_Plots displays the posterior mean smooths (solid lines) and their 95 % credible ribbons for each of the six covariates, expressed on the original physical scales. As sea‐surface temperature increases from approximately 15 °C to 27 °C, modeled Chl a falls steeply from about 0.16 mg m⁻³ to 0.07 mg m⁻³, with the greatest sensitivity between 15 and 20 °C before the curve asymptotes at warmer temperatures. Surface heat flux produces a unimodal response: Chl a is lowest (\~0.065 mg m⁻³) under strong cooling (–300 W m⁻²), rises to a maximum of roughly 0.09 mg m⁻³ at around –50 W m⁻², then declines again to near 0.085 mg m⁻³ by +200 W m⁻². The N : P ratio effect is characterized by an abrupt drop from about 0.12 mg m⁻³ at low ratios (\~20) to 0.08 mg m⁻³ by an N : P of 100, after which Chl a plateaus to approximately 0.09 mg m⁻³ at the highest ratios (\~100 to 400). Total nutrient concentration drives a pronounced hump: Chl a increases from \~0.06 mg m⁻³ at minimal loads to \~0.10 mg m⁻³ by 100 mmol m⁻³, peaks near 0.18 mg m⁻³ at 500 mmol m⁻³, and then falls back toward 0.10 mg m⁻³ at 725 mmol m⁻³. Mixed‐layer depth exhibits a U‐shaped trough, with Chl a declining from \~0.11 mg m⁻³ at shallow depths (10 m) to \~0.045 mg m⁻³ by \~150 m before climbing slightly to \~0.05 mg m⁻³ at 500 m. Finally, sea‐surface salinity shows a gentle negative trend, with Chl a decreasing from roughly 0.09 mg m⁻³ at 38.25 ppm to about 0.07 mg m⁻³ at 39.2 ppm.

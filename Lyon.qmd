@@ -83,7 +83,8 @@ df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", st
 df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
-  mutate(Box = "Lyon")
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
 
 df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
@@ -250,7 +251,9 @@ df <- df_chla %>%
   left_join(df_NH4,  by = c("Box", "Date")) %>%
   left_join(df_MLD,  by = c("Box", "Date")) %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
-  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value")
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))
 
 
 write.csv(df,"Data/df.all.csv", row.names = F)
@@ -316,10 +319,10 @@ fit_Lyon <- brm(
   iter = 10000,
   warmup = 1000,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD"
+  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD_2"
 )
-
-# plot(fit_adriatic)
+# 
+# plot(fit_Lyon)
 # summary(fit_Lyon)
 
 
@@ -373,10 +376,6 @@ ggplot(aes(x = (N_P*N_P_back_to_raw_Lyon$sd)+N_P_back_to_raw_Lyon$avg, y = estim
   geom_line(color= "yellow3")+
   labs(y = "Chla (mg.m⁻³)",x="NPratio")+
   theme_Bede()
-
-
-
-
 
 
 sum_Nutri_back_to_raw_Lyon <- df_back_to_raw %>% 
@@ -434,11 +433,8 @@ plot <- (Lyon_sst+Lyon_HF)/
   (Lyon_MLD+Lyon_sss)
 
 
-
-
-# plot(conditional_smooths(fit_adriatic), ask = FALSE)
-
 ```
+
 
 ```{r Flextable Lyon Model}
 #| label: tbl-Model_outputs_Lyon
