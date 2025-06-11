@@ -9,6 +9,13 @@ editor_options:
   chunk_output_type: console
 ---
 
+::: {style="text-align: center; margin-top: 20px;"}
+<button onclick="window.open(&#39;https://github.com/SigOiry/GAM_Chla_MedSea&#39;, &#39;_blank&#39;);" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+
+Visit the Github repository
+</button>
+:::
+
 ```{r library}
 #| cache: false
 #| echo: false
@@ -41,7 +48,7 @@ df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFact
                          Box == "Chipre" ~ "Cyprus",
                          T ~ "Lyon"))
 
-df_chla
+# df_chla
 
 ```
 
