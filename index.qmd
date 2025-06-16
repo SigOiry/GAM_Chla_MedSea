@@ -264,7 +264,8 @@ df <- df_chla %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
   pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
   group_by(Metric, Box) %>% 
-  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99)))) %>% 
+  ungroup()
 
 
 write.csv(df,"Data/df.all.csv", row.names = F)
@@ -435,7 +436,7 @@ m %>%
 
 ```
 
-@fig-map_sites shows the three study sites considered in this work. The first, named Lyon, is located in the Gulf of Lion, between Corsica and Spain. It covers a total area of `r round(polygons$area_km2[polygons$Site == "Lyon"],0)` km². The *Adriatic* region, situated between Italy and Croatia, covers a similar area of `r round(polygons$area_km2[polygons$Site == "Adriatic"],0)` km². The third region, *Cyprus*, is the smallest of the three. It is located south of the island of Cyprus and covers an area of `r round(polygons$area_km2[polygons$Site == "Cyprus"],0)` km². 
+@fig-map_sites shows the three study sites considered in this work. The first, named Lyon, is located in the Gulf of Lion, between Corsica and Spain. It covers a total area of `r as.character(round(polygons$area_km2[polygons$Site == "Lyon"],0))` km². The *Adriatic* region, situated between Italy and Croatia, covers a similar area of `r as.character(round(polygons$area_km2[polygons$Site == "Adriatic"],0))` km². The third region, *Cyprus*, is the smallest of the three. It is located south of the island of Cyprus and covers an area of `r as.character(round(polygons$area_km2[polygons$Site == "Cyprus"],0))` km². 
 
 # Data investigation
 
@@ -463,11 +464,39 @@ p <- df %>%
   facet_wrap(~Metric,scales = "free", ncol = 2)+
   theme_bw()+
   theme(legend.position = "top")
-
-
   ggplotly(p)
 
 ```
+
+```{r inspection plots}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+library(tidyverse)
+
+df_inspection <- df %>% 
+  pivot_wider(names_from = Metric, values_from = Value) %>% 
+  mutate(NPratio = (NO3+NH4)/PO4,
+         TotNutri = NH4+NO3+PO4) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metrics", values_to = "Values")
+
+dfnp <- df_inspection %>% 
+  # dplyr::filter(Metrics %in% c("SST","MLD","NPratio","GeoMean_Chla","TotNutri")) %>% 
+  dplyr::filter(Metrics == c("NPratio"))
+
+
+dfnp %>% 
+  ggplot(aes(x = Values, color = Box, fill = Box))+
+  xlim(c(0,100))+
+  geom_histogram()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  facet_wrap(Box~Metrics, ncol = 5)
+
+```
+
 
 @fig-overall_raw shows the variation of each response variable and of Chlorophyll-a over time, starting on 1 January 1999. *Lyon* is the site where Chlorophyll-a is most variable, with a minimum of `r round(min(df %>% dplyr::filter(Metric == "GeoMean_Chla", Box == "Lyon") %>% pull(Value)),2)` mg m⁻³ and a maximum of `r round(max(df %>% dplyr::filter(Metric == "GeoMean_Chla", Box == "Lyon") %>% pull(Value)),2)` mg m⁻³. On average, *Lyon* has a Chla concentration of `r round(mean(df %>% dplyr::filter(Metric == "GeoMean_Chla", Box == "Lyon") %>% pull(Value), na.rm = TRUE),2)` mg m⁻³, which is higher than those of the two other regions: `r round(mean(df %>% dplyr::filter(Metric == "GeoMean_Chla", Box == "Adriatic") %>% pull(Value), na.rm = TRUE),2)` mg m⁻³ for *Adriatic* and `r round(mean(df %>% dplyr::filter(Metric == "GeoMean_Chla", Box == "Cyprus") %>% pull(Value), na.rm = TRUE),2)` mg m⁻³ for *Cyprus*.
 

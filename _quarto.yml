@@ -1,6 +1,9 @@
 project:
   type: website
   output-dir: "docs"
+  render:
+    - index.qmd
+    - Single_Model.qmd
 
 website:
   title: "Chla Variability of the Med Sea"
@@ -8,12 +11,8 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: Lyon.qmd
-        text: Gulf of Lyon
-      - href: Cyprus.qmd
-        text: Cyprus
-      - href: Adriatic.qmd
-        text: Adriatic Sea
+      - href: Single_Model.qmd
+        text: Results
 format:
   html:
     theme:

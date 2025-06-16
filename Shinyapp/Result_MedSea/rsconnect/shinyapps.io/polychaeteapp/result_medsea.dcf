@@ -1,0 +1,10 @@
+name: result_medsea
+title:
+username: polychaeteapp
+account: polychaeteapp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14942500
+bundleId: 10465291
+url: https://polychaeteapp.shinyapps.io/result_medsea/
+version: 1

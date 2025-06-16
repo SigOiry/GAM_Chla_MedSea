@@ -1,0 +1,973 @@
+---
+title: "Results of the GAMs of the MedSea"
+format:
+  html:
+    page-layout: full
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r library}
+#| cache: false
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(lubridate)
+library(brms)
+library(purrr)
+library(dplyr)
+library(Utilities.Package)
+```
+
+```{r Open Chlorophyll}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+# Read in
+df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = case_when(str_detect(metric,"GEOM") ~ "GeoMean_Chla",
+                            T ~ "STD_Chla")) %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+
+
+```
+
+```{r Open HF}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_HF_Lyon <- read.csv("Data/Variables_values/Monthly_HF_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_HF_Chipre <- read.csv("Data/Variables_values/Monthly_HF_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_HF <- rbind(df_HF_Adriatic,df_HF_Lyon,df_HF_Chipre)
+
+rm(df_HF_Adriatic)
+rm(df_HF_Lyon)
+rm(df_HF_Chipre)
+
+
+```
+
+```{r Open MLD}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
+
+df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_MLD <- rbind(df_MLD_Adriatic,df_MLD_Lyon,df_MLD_Chipre)
+
+rm(df_MLD_Adriatic)
+rm(df_MLD_Lyon)
+rm(df_MLD_Chipre)
+
+```
+
+```{r Open NH4}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NH4 <- rbind(df_NH4_Adriatic,df_NH4_Lyon,df_NH4_Chipre)
+
+rm(df_NH4_Adriatic)
+rm(df_NH4_Lyon)
+rm(df_NH4_Chipre)
+
+```
+
+```{r Open NO3}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
+
+rm(df_NO3_Adriatic)
+rm(df_NO3_Lyon)
+rm(df_NO3_Chipre)
+
+```
+
+```{r Open PO4}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_PO4 <- rbind(df_PO4_Adriatic,df_PO4_Lyon,df_PO4_Chipre)
+
+rm(df_PO4_Adriatic)
+rm(df_PO4_Lyon)
+rm(df_PO4_Chipre)
+
+```
+
+```{r Open SSS}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_SSS <- rbind(df_SSS_Adriatic,df_SSS_Lyon,df_SSS_Chipre)
+
+rm(df_SSS_Adriatic)
+rm(df_SSS_Lyon)
+rm(df_SSS_Chipre)
+
+```
+
+```{r Open SST}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = "SST") %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+```
+
+```{r stack all}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+date_min <- dmy("01-01-2018")
+date_max <- dmy("01-01-2021")
+
+df_chla <- df_chla %>% 
+  dplyr::filter(Date >= min(df_HF$Date), 
+                Date <= max(df_HF$Date))
+
+df <- df_chla %>%
+  left_join(df_SST,  by = c("Box", "Date")) %>%
+  left_join(df_SSS,  by = c("Box", "Date")) %>%
+  left_join(df_PO4,  by = c("Box", "Date")) %>%
+  left_join(df_NO3,  by = c("Box", "Date")) %>%
+  left_join(df_NH4,  by = c("Box", "Date")) %>%
+  left_join(df_MLD,  by = c("Box", "Date")) %>%
+  left_join(df_HF,   by = c("Box", "Date")) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
+  ungroup()
+
+
+
+write.csv(df,"Data/df.all.csv", row.names = F)
+
+# df %>% 
+#   # dplyr::filter(Date >= date_min, 
+#                 # Date <= date_max) %>% 
+#   ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
+#   geom_point()+
+#   geom_line()+
+#   # geom_smooth(method = "gam")+
+#   facet_wrap(~Metric,scales = "free")+
+#   theme_bw()
+
+df_wide <- df %>% 
+  pivot_wider(names_from = Metric,values_from = Value)
+
+# pairs(df_wide %>% dplyr::select(-Box))
+
+colscale <- c("Adriatic" = "goldenrod","Lyon" = "darkgreen","Cyprus" = "darkred")
+
+
+```
+
+```{r model unique}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+library(brms)
+library(tidyverse)
+library(patchwork)
+
+df_wide_all <- df_wide %>%
+  # dplyr::filter(Box == "Cyprus") %>%
+  mutate(
+    DIN  = NO3 + NH4,
+    N_P  = DIN / PO4,
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4,
+    Box = as.factor(Box)
+  ) %>%
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_STD <- df_wide_all %>%
+  group_by(Box) %>% 
+  mutate(GeoMean_Chla_log_scaled = log(GeoMean_Chla),
+         across(c(GeoMean_Chla_log_scaled,SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )),)
+
+  
+ggplot(df_wide_STD, aes(x = GeoMean_Chla_log_scaled)) +
+  geom_histogram()
+# pairs(df_wide_Cyprus_STD %>% dplyr::select(-Box))
+
+df_back_to_raw <- df_wide_all %>% 
+  pivot_longer(-c(Date, Box, GeoMean_Chla, STD_Chla), values_to = "values", names_to = "metrics") %>% 
+  group_by(metrics, Box) %>% 
+  reframe(avg = mean(values, na.rm = T),
+          sd = sd(values, na.rm=T))
+
+
+# fit_Cyprus <- brm(
+#   formula = GeoMean_Chla ~
+#     s(SST) + s(SSS) + s(N_P) +
+#     s(sum_Nutri) + s(MLD) +
+#     s(HF),
+#   data = df_wide_Cyprus_STD,
+#   family = Gamma(link = "log"),
+#   chains = 4, cores = 15,
+#   iter = 10000,
+#   warmup = 1000,
+#   control = list(adapt_delta = 0.97,  max_treedepth = 15),
+#   file = "Data/Model/Chla_GAM_all_10000_Cyprus_log_adapt_delta_97_tree_15_Cleaned_STD2"
+# )
+fit_all <- brm(
+  formula = GeoMean_Chla_log_scaled ~
+    s(SST, by = Box) + s(N_P, by = Box) +
+    s(sum_Nutri, by = Box) + s(MLD, by = Box),
+  data = df_wide_STD,
+  family = student(),
+  chains = 4, cores = 15,
+  iter = 5000,
+  warmup = 500,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/A_Model_Unique_Log_STD_5000_Student_SST_NP_Nutri_MLD"
+)
+
+
+plot(fit_all)
+summary(fit_all)
+
+```
+
+```{r manual dataset building}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+library(tidyverse)
+library(brms)
+
+library(brms)
+library(tidyverse)
+library(patchwork)
+
+df_wide_all <- df_wide %>%
+  # dplyr::filter(Box == "Cyprus") %>%
+  mutate(
+    DIN  = NO3 + NH4,
+    N_P  = DIN / PO4,
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4,
+    Box = as.factor(Box)
+  ) %>%
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_STD <- df_wide_all %>%
+  group_by(Box) %>% 
+  mutate(GeoMean_Chla = log(GeoMean_Chla),
+         across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE ))) %>% 
+  ungroup()
+
+# Get the names of regions
+regions <- unique(df_wide_STD$Box)
+
+df_back_to_raw <- df_wide_all %>% 
+  mutate(GeoMean_Chla = log(GeoMean_Chla)) %>% 
+  pivot_longer(-c(Date, Box, STD_Chla), values_to = "values", names_to = "metrics") %>% 
+  group_by(metrics, Box) %>% 
+  reframe(avg = mean(values, na.rm = T),
+          sd = sd(values, na.rm=T))
+
+df_back_to_raw_Chl <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "GeoMean_Chla")
+
+# Function to create newdata for marginal effect of one variable per region
+make_newdata <- function(region, variable_name, model_data, n_points = 100) {
+  # Filter data to get range of the target variable within that region
+  data_region <- model_data %>% filter(Box == region)
+
+  # Get means of all variables
+  means <- data_region %>%
+    select(SST, N_P, sum_Nutri, MLD) %>%
+    summarise(across(everything(), mean, na.rm = TRUE))
+
+  # Sequence for the variable to test
+  test_seq <- seq(min(data_region[[variable_name]], na.rm = TRUE),
+                  max(data_region[[variable_name]], na.rm = TRUE),
+                  length.out = n_points)
+
+  # Create newdata where all vars = mean, except the test var
+  newdata <- tibble(
+    SST =rep(means$SST,100),
+    N_P = means$N_P,
+    sum_Nutri = means$sum_Nutri,
+    MLD = means$MLD
+  )
+  newdata[[variable_name]] <- test_seq
+  newdata$Box <- region
+
+  return(newdata)
+}
+
+# Loop over variables and regions, get fitted values
+variables <- c("SST", "N_P", "sum_Nutri", "MLD")
+all_preds <- list()
+
+for (var in variables) {
+  for (reg in regions) {
+    nd <- make_newdata(reg, var, df_wide_STD)
+    preds <- fitted(fit_all, newdata = nd, re_formula = NA, summary = TRUE) %>%
+      as_tibble() %>%
+      bind_cols(nd) %>%
+      mutate(Variable = var, Box = reg)
+    all_preds[[paste(reg, var, sep = "_")]] <- preds
+  }
+}
+
+# Combine all into one dataframe
+df_all_preds <- bind_rows(all_preds)
+```
+
+```{r NP}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_NP_Manual <- df_all_preds %>% filter(Variable == "N_P") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd))
+
+df_NP_Relatif <- df_all_preds %>% filter(Variable == "N_P") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values")%>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(Q2.5 = Q2.5 /mean(Estimate),
+         Q97.5 = Q97.5 /mean(Estimate),
+         Estimate = Estimate /mean(Estimate),
+         N_P =N_P/mean(N_P))
+
+(p1 <- df_NP_Relatif %>% 
+  ggplot(aes(x = N_P, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+  geom_line() +
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  geom_ribbon(alpha = 0.2, color = NA) +
+  labs(title = "Marginal effect of NP on Chla", y = "Chla (mg/m³)", x = "NPratio") +
+  theme_minimal()
+)
+
+write.csv(df_NP_Relatif,"Outputs/df_NP_Relatif.csv", row.names = F)
+write.csv(df_NP_Manual,"Outputs/df_NP_Raw.csv", row.names = F)
+
+write.csv(df_NP_Relatif,"Shinyapp/Result_MedSea/df_NP_Relatif.csv", row.names = F)
+write.csv(df_NP_Manual,"Shinyapp/Result_MedSea/df_NP_Raw.csv", row.names = F)
+# setwd("../")
+```
+
+```{r MLD}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+
+df_MLD_Manual <- df_all_preds %>% filter(Variable == "MLD") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg))  %>% 
+  dplyr::select(-c(avg,sd))
+
+df_MLD_Relatif <- df_all_preds %>% filter(Variable == "MLD") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg))  %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(Q2.5 = Q2.5 /mean(Estimate),
+         Q97.5 = Q97.5 /mean(Estimate),
+         Estimate = Estimate /mean(Estimate),
+         MLD =MLD/mean(MLD))
+
+(p5 <- df_MLD_Manual %>% 
+  ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+  geom_line() +
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  geom_ribbon(alpha = 0.2, color = NA) +
+  labs(title = "Marginal effect of MLD on Chla", y = "Chla (mg/m³)", x = "MLD") +
+  theme_minimal())
+
+# setwd("../")
+
+write.csv(df_MLD_Relatif,"Outputs/df_MLD_Relatif.csv", row.names = F)
+write.csv(df_MLD_Manual,"Outputs/df_MLD_Raw.csv", row.names = F)
+
+write.csv(df_MLD_Relatif,"Shinyapp/Result_MedSea/df_MLD_Relatif.csv", row.names = F)
+write.csv(df_MLD_Relatif,"Shinyapp/Result_MedSea/df_MLD_Raw.csv", row.names = F)
+```
+
+```{r Sum_Nutri}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+
+df_sum_Nutri_Manual <- df_all_preds %>% filter(Variable == "sum_Nutri") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd))
+
+df_sum_Nutri_Relatif <- df_all_preds %>% filter(Variable == "sum_Nutri") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(Q2.5 = Q2.5 /mean(Estimate),
+         Q97.5 = Q97.5 /mean(Estimate),
+         Estimate = Estimate /mean(Estimate),
+         sum_Nutri =sum_Nutri/mean(sum_Nutri))
+
+(p4 <- df_sum_Nutri_Relatif %>% 
+  ggplot(aes(x = sum_Nutri, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+  geom_line() +
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  geom_ribbon(alpha = 0.2, color = NA) +
+  labs(title = "Marginal effect of sum_Nutri on Chla", y = "Chla (mg/m³)", x = "sum_Nutri") +
+  theme_minimal())
+
+write.csv(df_sum_Nutri_Relatif,"Outputs/df_Sum_Nutri_Relatif.csv", row.names = F)
+write.csv(df_sum_Nutri_Manual,"Outputs/df_Sum_Nutri_Raw.csv", row.names = F)
+
+write.csv(df_sum_Nutri_Relatif,"Shinyapp/Result_MedSea/df_Sum_Nutri_Relatif.csv", row.names = F)
+write.csv(df_sum_Nutri_Manual,"Shinyapp/Result_MedSea/df_Sum_Nutri_Raw.csv", row.names = F)
+```
+
+```{r SST}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+df_SST_Manual <- df_all_preds %>% filter(Variable == "SST") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values")%>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd))
+
+df_SST_Relatif <- df_all_preds %>% filter(Variable == "SST") %>% 
+  dplyr::select(-c(Variable)) %>% 
+  pivot_longer(-c(Box,Estimate,Est.Error, Q2.5, Q97.5), names_to = "metrics", values_to = "values")%>% 
+  left_join(df_back_to_raw, by = c("Box","metrics")) %>% 
+  mutate(values = (values*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  pivot_wider(names_from = "metrics",values_from = "values") %>% 
+  left_join(df_back_to_raw_Chl, by = "Box") %>% 
+  mutate(Estimate = exp(Estimate*sd+avg),
+         Q2.5 = exp(Q2.5*sd+avg),
+         Q97.5 = exp(Q97.5*sd+avg)) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(Q2.5 = Q2.5 /mean(Estimate),
+         Q97.5 = Q97.5 /mean(Estimate),
+         Estimate = Estimate /mean(Estimate),
+         SST =SST/mean(SST))
+
+(p2 <- df_SST_Relatif %>% 
+  ggplot(aes(x = SST, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+  geom_line() +
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  geom_ribbon(alpha = 0.2, color = NA) +
+  labs(title = "Marginal effect of SST on Chla", y = "Chla (mg/m³)", x = "SST") +
+  theme_minimal())
+
+write.csv(df_SST_Relatif,"Outputs/df_SST_Relatif.csv", row.names = F)
+write.csv(df_SST_Manual,"Outputs/df_SST_Raw.csv", row.names = F)
+
+write.csv(df_SST_Relatif,"Shinyapp/Result_MedSea/df_SST_Relatif.csv", row.names = F)
+write.csv(df_SST_Manual,"Shinyapp/Result_MedSea/df_SST_Raw.csv", row.names = F)
+
+# ---- settings ----
+folder_to_zip <- "Outputs"   # directory whose contents you want to archive
+zip_file      <- "output.zip"
+
+# ---- create the zip ----
+# list all files (recursive = TRUE grabs sub-folders too; set FALSE if you only
+# want the top-level files)
+files <- list.files(folder_to_zip, recursive = TRUE, full.names = TRUE)
+
+# make sure you’re in the folder so the archive has relative paths, not full paths
+
+utils::zip(zipfile = zip_file, files = files)
+
+
+```
+
+
+::: {style="text-align: center; margin-top: 20px;"}
+<button onclick="window.open(&#39;https://github.com/SigOiry/GAM_Chla_MedSea/raw/refs/heads/main/output.zip&#39;, &#39;_blank&#39;);" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+
+Download Results of the modeling
+</button>
+:::
+
+
+<!-- Inline CSS to wipe out any residual body/container padding -->
+<style>
+  body, .quarto-page, .quarto-container {
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+<!-- Full-width iframe holding the Shiny app -->
+<iframe
+  src="https://polychaeteapp.shinyapps.io/result_medsea/"
+  width="100%"
+  height="900"
+  style="border: none; margin: 0; padding: 0;">
+</iframe>
+
+
+
+
+
+
+
+```{r Poubelle de code}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+
+
+########## SST #####################
+df_back_to_raw_SST <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "SST") %>% 
+  dplyr::select(-metrics)
+
+##### RAW
+
+Effect_of_SST_RAW <- conditional_effects(
+  fit_all,
+  effects = "SST:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,SST,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_SST, by = "Box") %>% 
+  mutate(SST = (SST*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd))
+
+p1 <- Effect_of_SST_RAW %>% 
+  ggplot(aes(x = SST, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  labs(y = "Chla (mg.m⁻³)",x="SST (°C)")+
+  theme_Bede()
+
+##### Relative 
+Effect_of_SST_relative <- conditional_effects(
+  fit_all,
+  effects = "SST:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,SST,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_SST, by = "Box") %>% 
+  mutate(SST = (SST*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(lower__ = lower__ /mean(estimate__),
+         upper__ = upper__ /mean(estimate__),
+         estimate__ = estimate__ /mean(estimate__),
+         SST =SST/mean(SST))
+
+p2 <- Effect_of_SST_relative %>% 
+  ggplot(aes(x = SST, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  labs(y = "Relative Change of Chla",x="Relative SST")+
+  theme_Bede()
+
+
+########## MLD ##################
+df_back_to_raw_MLD <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "MLD") %>% 
+  dplyr::select(-metrics)
+
+### RAW
+Effect_of_MLD_RAW <- conditional_effects(
+  fit_all,
+  effects = "MLD:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,MLD,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_MLD, by = "Box") %>% 
+  mutate(MLD = (MLD*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) 
+
+p3 <- Effect_of_MLD_RAW %>% 
+  ggplot(aes(x = MLD, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  coord_cartesian(ylim=c(0,1))+
+  labs(y = "Chla (mg.m⁻³)",x="MLD (m)")+
+  theme_Bede()
+
+
+
+### Relative
+Effect_of_MLD_relative <- conditional_effects(
+  fit_all,
+  effects = "MLD:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,MLD,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_MLD, by = "Box") %>% 
+  mutate(MLD = (MLD*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(lower__ = lower__ /mean(estimate__),
+         upper__ = upper__ /mean(estimate__),
+         estimate__ = estimate__ /mean(estimate__),
+         MLD =MLD/mean(MLD))
+
+p4 <- Effect_of_MLD_relative %>% 
+  ggplot(aes(x = MLD, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  coord_cartesian(ylim=c(0,2))+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  labs(y = "Relative Change of Chla",x="Relative MLD")+
+  theme_Bede()
+
+
+########## N_P ##################
+df_back_to_raw_N_P <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "N_P") %>% 
+  dplyr::select(-metrics)
+
+### RAW
+Effect_of_N_P_RAW <- conditional_effects(
+  fit_all,
+  effects = "N_P:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,N_P,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_N_P, by = "Box") %>% 
+  mutate(N_P = (N_P*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) 
+
+p5 <- Effect_of_N_P_RAW %>% 
+  ggplot(aes(x = N_P, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  coord_cartesian(ylim=c(0,1),
+                  xlim=c(0,100))+
+  labs(y = "Chla (mg.m⁻³)",x="NP ratio")+
+  theme_Bede()
+
+
+
+### Relative
+Effect_of_N_P_relative <- conditional_effects(
+  fit_all,
+  effects = "N_P:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,N_P,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_N_P, by = "Box") %>% 
+  mutate(N_P = (N_P*sd)+avg) %>%
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(lower__ = lower__ /mean(estimate__),
+         upper__ = upper__ /mean(estimate__),
+         estimate__ = estimate__ /mean(estimate__),
+         N_P =N_P/mean(N_P)
+         )
+
+p6 <- Effect_of_N_P_relative %>% 
+  ggplot(aes(x = N_P, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  labs(y = "Relative Change of Chla",x="Ratio N_P")+
+  theme_Bede()
+
+
+########## sum_Nutri ##################
+df_back_to_raw_sum_Nutri <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "sum_Nutri") %>% 
+  dplyr::select(-metrics)
+
+### RAW
+Effect_of_sum_Nutri_RAW <- conditional_effects(
+  fit_all,
+  effects = "sum_Nutri:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,sum_Nutri,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_sum_Nutri, by = "Box") %>% 
+  mutate(sum_Nutri = (sum_Nutri*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) 
+
+p7 <- Effect_of_sum_Nutri_RAW %>% 
+  ggplot(aes(x = sum_Nutri, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  # coord_cartesian(ylim=c(0,1))+
+  labs(y = "Chla (mg.m⁻³)",x="Sum of Nutrients (mmol.m-3)")+
+  theme_Bede()
+
+
+
+### Relative
+Effect_of_sum_Nutri_relative <- conditional_effects(
+  fit_all,
+  effects = "sum_Nutri:Box",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+  as.tibble() %>% 
+  dplyr::select(Box,sum_Nutri,estimate__,lower__,upper__) %>% 
+  left_join(df_back_to_raw_sum_Nutri, by = "Box") %>% 
+  mutate(sum_Nutri = (sum_Nutri*sd)+avg) %>% 
+  dplyr::select(-c(avg,sd)) %>% 
+  group_by(Box) %>% 
+  mutate(lower__ = lower__ /mean(estimate__),
+         upper__ = upper__ /mean(estimate__),
+         estimate__ = estimate__ /mean(estimate__),
+         sum_Nutri =sum_Nutri/mean(sum_Nutri))
+
+p8 <- Effect_of_sum_Nutri_relative %>% 
+  ggplot(aes(x = sum_Nutri, y = estimate__, color = Box, fill = Box, group = Box))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.1)+
+  geom_line()+
+  scale_color_manual(values = colscale)+
+  scale_fill_manual(values = colscale)+
+  labs(y = "Relative Change of Chla",x="Relative Sum of Nutrients")+
+  theme_Bede()
+
+plot_Raw <- (p1 + p3)/(p5 + p7)+
+  plot_layout(guides = "collect") &
+  theme(legend.position = "top")
+
+(plot_relative <- (p2 + p4)/(p6 + p8)+
+  plot_layout(guides = "collect") &
+  theme(legend.position = "top"))
+
+```
+
+
+

@@ -1,0 +1,522 @@
+---
+title: "Gulf of Lyon"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r library}
+#| cache: false
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(lubridate)
+library(brms)
+library(purrr)
+library(dplyr)
+library(Utilities.Package)
+```
+
+```{r Open Chlorophyll}
+#| cache: false
+#| echo: false
+#| warning: false
+
+# Read in
+df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = case_when(str_detect(metric,"GEOM") ~ "GeoMean_Chla",
+                            T ~ "STD_Chla")) %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+
+
+```
+
+```{r Open HF}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_HF_Lyon <- read.csv("Data/Variables_values/Monthly_HF_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_HF_Chipre <- read.csv("Data/Variables_values/Monthly_HF_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_HF <- rbind(df_HF_Adriatic,df_HF_Lyon,df_HF_Chipre)
+
+rm(df_HF_Adriatic)
+rm(df_HF_Lyon)
+rm(df_HF_Chipre)
+
+
+```
+
+```{r Open MLD}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
+
+df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_MLD <- rbind(df_MLD_Adriatic,df_MLD_Lyon,df_MLD_Chipre)
+
+rm(df_MLD_Adriatic)
+rm(df_MLD_Lyon)
+rm(df_MLD_Chipre)
+
+```
+
+```{r Open NH4}
+#| cache: false
+#| echo: false
+#| warning: false
+
+
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NH4 <- rbind(df_NH4_Adriatic,df_NH4_Lyon,df_NH4_Chipre)
+
+rm(df_NH4_Adriatic)
+rm(df_NH4_Lyon)
+rm(df_NH4_Chipre)
+
+```
+
+```{r Open NO3}
+#| cache: false
+#| echo: false
+#| warning: false
+
+
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
+
+rm(df_NO3_Adriatic)
+rm(df_NO3_Lyon)
+rm(df_NO3_Chipre)
+
+```
+
+```{r Open PO4}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_PO4 <- rbind(df_PO4_Adriatic,df_PO4_Lyon,df_PO4_Chipre)
+
+rm(df_PO4_Adriatic)
+rm(df_PO4_Lyon)
+rm(df_PO4_Chipre)
+
+```
+
+```{r Open SSS}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_SSS <- rbind(df_SSS_Adriatic,df_SSS_Lyon,df_SSS_Chipre)
+
+rm(df_SSS_Adriatic)
+rm(df_SSS_Lyon)
+rm(df_SSS_Chipre)
+
+```
+
+```{r Open SST}
+#| cache: false
+#| echo: false
+#| warning: false
+
+df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = "SST") %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+```
+
+```{r stack all}
+#| cache: false
+#| echo: false
+#| warning: false
+
+date_min <- dmy("01-01-2018")
+date_max <- dmy("01-01-2021")
+
+df_chla <- df_chla %>% 
+  dplyr::filter(Date >= min(df_HF$Date), 
+                Date <= max(df_HF$Date))
+
+df <- df_chla %>%
+  left_join(df_SST,  by = c("Box", "Date")) %>%
+  left_join(df_SSS,  by = c("Box", "Date")) %>%
+  left_join(df_PO4,  by = c("Box", "Date")) %>%
+  left_join(df_NO3,  by = c("Box", "Date")) %>%
+  left_join(df_NH4,  by = c("Box", "Date")) %>%
+  left_join(df_MLD,  by = c("Box", "Date")) %>%
+  left_join(df_HF,   by = c("Box", "Date")) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
+  ungroup()
+
+
+
+write.csv(df,"Data/df.all.csv", row.names = F)
+
+# df %>% 
+#   # dplyr::filter(Date >= date_min, 
+#                 # Date <= date_max) %>% 
+#   ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
+#   geom_point()+
+#   geom_line()+
+#   # geom_smooth(method = "gam")+
+#   facet_wrap(~Metric,scales = "free")+
+#   theme_bw()
+
+df_wide <- df %>% 
+  pivot_wider(names_from = Metric,values_from = Value)
+
+# pairs(df_wide %>% dplyr::select(-Box))
+
+
+```
+
+```{r Model Lyon}
+#| cache: false
+#| echo: false
+#| warning: false
+
+library(brms)
+library(tidyverse)
+library(patchwork)
+
+df_wide_Lyon <- df_wide %>%
+  dplyr::filter(Box == "Lyon") %>%
+  mutate(
+    DIN  = NO3 + NH4,
+    N_P  = DIN / PO4,
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4
+  ) %>%
+  dplyr::select(-c(PO4,NO3,NH4,DIN))
+
+df_wide_Lyon_STD <- df_wide_Lyon %>%
+  mutate(across(c(SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+# pairs(df_wide_Lyon_STD %>% dplyr::select(-Box))
+
+df_back_to_raw <- df_wide_Lyon %>% 
+  pivot_longer(-c(Date, Box, GeoMean_Chla, STD_Chla), values_to = "values", names_to = "metrics") %>% 
+  group_by(metrics) %>% 
+  reframe(avg = mean(values, na.rm = T),
+          sd = sd(values, na.rm=T))
+
+
+# fit_Lyon <- brm(
+#   formula = GeoMean_Chla ~
+#     s(SST) + s(SSS) + s(N_P) +
+#     s(sum_Nutri) + s(MLD) +
+#     s(HF),
+#   data = df_wide_Lyon_STD,
+#   family = Gamma(link = "log"),
+#   chains = 4, cores = 15,
+#   iter = 10000,
+#   warmup = 1000,
+#   control = list(adapt_delta = 0.97,  max_treedepth = 15),
+#   file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD_2"
+# )
+# 
+# plot(fit_Lyon)
+# summary(fit_Lyon)
+
+fit_Lyon <- brm(
+  formula = GeoMean_Chla ~
+    s(SST) + s(N_P) +
+    s(sum_Nutri) + s(MLD),
+  data = df_wide_Lyon_STD,
+  family = Gamma(link = "log"),
+  chains = 4, cores = 15,
+  iter = 10000,
+  warmup = 1000,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/Chla_GAM_all_10000_Lyon_log_adapt_delta_97_tree_15_Cleaned_STD_2_FewerVariables"
+)
+
+
+
+
+### Plots Lyon
+
+SST_back_to_raw_Lyon <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "SST")
+
+Lyon_sst <- conditional_effects(
+  fit_Lyon,
+  effects = "SST",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]] %>% 
+ggplot(aes(x = (SST*SST_back_to_raw_Lyon$sd)+SST_back_to_raw_Lyon$avg, y = estimate__))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "darkred", alpha = 0.1)+
+  geom_line(color= "darkred")+
+  labs(y = "Chla (mg.m⁻³)",x="SST (°C)")+
+  theme_Bede()
+
+
+# SSS_back_to_raw_Lyon <- df_back_to_raw %>% 
+#   dplyr::filter(metrics == "SSS")
+# 
+# Lyon_sss <- conditional_effects(
+#   fit_Lyon,
+#   effects = "SSS",      
+#   prob    = 0.80        
+#   # re_formula = NA     
+# )[[1]]%>% 
+# ggplot(aes(x = (SSS*SSS_back_to_raw_Lyon$sd)+SSS_back_to_raw_Lyon$avg, y = estimate__))+
+#   geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "#62B0D1", alpha = 0.1)+
+#   geom_line(color= "#62B0D1")+
+#   labs(y = "Chla (mg.m⁻³)",x="SSS (ppm)")+
+#   theme_Bede()
+
+
+N_P_back_to_raw_Lyon <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "N_P")
+
+Lyon_N_P <- conditional_effects(
+  fit_Lyon,
+  effects = "N_P",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]]%>% 
+ggplot(aes(x = (N_P*N_P_back_to_raw_Lyon$sd)+N_P_back_to_raw_Lyon$avg, y = estimate__))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "yellow3", alpha = 0.1)+
+  geom_line(color= "yellow3")+
+  labs(y = "Chla (mg.m⁻³)",x="NPratio")+
+  theme_Bede()
+
+
+sum_Nutri_back_to_raw_Lyon <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "sum_Nutri")
+
+Lyon_sum_Nutri <- conditional_effects(
+  fit_Lyon,
+  effects = "sum_Nutri",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]]%>% 
+ggplot(aes(x = (sum_Nutri*sum_Nutri_back_to_raw_Lyon$sd)+sum_Nutri_back_to_raw_Lyon$avg, y = estimate__))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "darkgreen", alpha = 0.1)+
+  geom_line(color= "darkgreen")+
+  labs(y = "Chla (mg.m⁻³)",x="Total Nutrients (mmol m-3)")+
+  theme_Bede()
+
+
+
+MLD_back_to_raw_Lyon <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "MLD")
+
+Lyon_MLD <- conditional_effects(
+  fit_Lyon,
+  effects = "MLD",      
+  prob    = 0.80        
+  # re_formula = NA     
+)[[1]]%>% 
+ggplot(aes(x = (MLD*MLD_back_to_raw_Lyon$sd)+MLD_back_to_raw_Lyon$avg, y = estimate__))+
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "darkblue", alpha = 0.1)+
+  geom_line(color= "darkblue")+
+  labs(y = "Chla (mg.m⁻³)",x="Mixed Layer Depth (m)")+
+  theme_Bede()
+
+
+HF_back_to_raw_Lyon <- df_back_to_raw %>% 
+  dplyr::filter(metrics == "HF")
+
+# Lyon_HF <- conditional_effects(
+#   fit_Lyon,
+#   effects = "HF",      
+#   prob    = 0.80        
+#   # re_formula = NA     
+# )[[1]]%>% 
+# ggplot(aes(x = (HF*HF_back_to_raw_Lyon$sd)+HF_back_to_raw_Lyon$avg, y = estimate__))+
+#   geom_ribbon(aes(ymin = lower__, ymax = upper__), color = NA, fill = "orangered", alpha = 0.1)+
+#   geom_line(color= "orangered")+
+#   labs(y = "Chla (mg.m⁻³)",x="Heat Flux (W m-2)")+
+#   theme_Bede()
+
+
+
+plot <- (Lyon_sst+Lyon_MLD)/
+ (Lyon_N_P+Lyon_sum_Nutri)
+  # (+Lyon_sss)
+
+
+```
+
+```{r Flextable Lyon Model}
+#| label: tbl-Model_outputs_Lyon
+#| fig-cap: Posterior summary of fixed‐effect and smooth‐term estimates from the generalized additive model (Gamma family, log link) predicting GeoMean_Chla as a function of sea surface temperature (SST), sea surface salinity (SSS), N:P ratio, total nutrient load (sum_Nutri), mixed‐layer depth (MLD), and heat flux (HF). Estimates shown are posterior means (Estimate) ± posterior standard errors (Est. Error), 95 % credible intervals (l–95 % CI, u–95 % CI), Gelman–Rubin convergence diagnostic (Rhat), and effective sample sizes for bulk and tail (Bulk ESS, Tail ESS).
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| out-width: "95%"
+#–– load packages
+library(brms)
+library(dplyr)
+library(tibble)
+library(flextable)
+
+#–– extract summary lists
+s <- summary(fit_Lyon)
+
+# Population-level (fixed) effects
+fixed_df <- as.data.frame(s$fixed) %>%
+  rownames_to_column("Parameter") %>%
+  mutate(Term = "Fixed")
+
+# Smooth terms
+smooth_df <- as.data.frame(s$smooth) %>%
+  rownames_to_column("Parameter") %>%
+  mutate(Term = "Smooth")
+
+# Family‐specific parameters (e.g. Gamma shape)
+spec_df <- as.data.frame(s$spec_pars) %>%
+  rownames_to_column("Parameter") %>%
+  mutate(Term = "Family")
+
+# bind into one table
+res_df <- bind_rows(fixed_df, smooth_df, spec_df) %>%
+  select(Term, Parameter, Estimate = Estimate,
+         `Est.Error`, `l-95% CI`, `u-95% CI`, Rhat, `Bulk_ESS`, `Tail_ESS`)
+
+#–– build flextable
+ft <- flextable(res_df) %>%
+  # format numeric columns to 3 decimal places
+  colformat_num(j = c("Estimate","Est.Error","l-95% CI","u-95% CI","Rhat","Bulk_ESS","Tail_ESS"),
+                digits = 3) %>%
+  # add a little zebra striping and autofit
+  theme_zebra() %>%
+  autofit() %>%
+  # optional: bold the header row
+  bold(i = 1, bold = TRUE)
+
+# display
+ft
+
+```
+
+<!-- @tbl-Model_outputs_Lyon revealed that among all predictors only the N : P ratio exhibited a clear influence on chlorophyll-a. Specifically, higher N : P was associated with a strong decline in GeoMean_Chla (posterior mean effect −16.24, 95 % credible interval \[−23.39, −9.42\]). In contrast, the smooth terms for sea‐surface temperature (−2.47 \[−4.79, 0.69\]), sea‐surface salinity (−0.01 \[−1.72, 1.88\]), total nutrient load (−1.07 \[−6.49, 4.03\]), mixed‐layer depth (13.84 \[−24.40, 59.80\]) and heat flux (−3.86 \[−8.64, 0.64\]) all had 95 % credible intervals overlapping zero, indicating weaker effect of these variables on chlorophyll-a in our study. Only SST and HF have a slight tendency towards a negtative effect on the Chla, having 0 included just on the edge of the distribution of there 95% credible intervals. -->
+
+```{r overall raw plot}
+#| label: fig-Lyon_Plots
+#| fig-cap: "Posterior conditional (marginal) effects of the six environmental drivers retained in the Gamma-GAM for monthly geometric-mean chlorophyll-a (Chla) in the Gulf of Lyon. For each predictor, the solid coloured line is the posterior median of the expected Chla when that variable varies across its observed range while all other covariates are fixed at their means; the shaded band is the corresponding 95 % credible interval on the response scale. Axes are shown in original physical units: sea-surface temperature (°C), net heat flux (W m⁻²), molar N : P ratio, summed dissolved nutrients (mmol m⁻³), mixed-layer depth (m) and sea-surface salinity (ppt)."
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| fig-height: 10
+
+plot
+```
+
+<!-- @fig-Lyon_Plots displays the posterior mean smooths (solid lines) and their 95 % credible ribbons for each of the six covariates, expressed on the original physical scales. -->
+
+<!-- The conditional‐effects curves (@fig-Lyon_Plots) reveal that chlorophyll‐a declines from approximately 0.30 mg m⁻³ at 14 °C to about 0.06 mg m⁻³ by 26 °C as sea‐surface temperature rises, suggesting a steady cooling of primary‐production potential with warming. Heat flux exerts a U‐shaped influence: Chl a is lowest (\~0.08 mg m⁻³) under strong negative fluxes (around --200 W m⁻²) and increases to roughly 0.18 mg m⁻³ at 0 W m⁻² before leveling off. In contrast, the N : P ratio produces a sharp drop in Chl a from nearly 0.90 mg m⁻³ at N : P≈10 down to \~0.30 mg m⁻³ by N : P≈25, beyond which values remain relatively constant around 0.20 mg m⁻³. Total nutrient concentration yields an almost flat response---Chl a hovers near 0.15 mg m⁻³ between 0 and 4500 mmol m⁻³, with only a slight uptick toward 0.20 mg m⁻³ at the highest loads. Mixed‐layer depth generates a broad peak a medium depth: Chl a rises from \~0.15 mg m⁻³ at shallow depths to a maximum of \~0.35 mg m⁻³ around 350 m of MLD and then falls back to \~0.15 mg m⁻³ by 400 m. Finally, sea‐surface salinity shows virtually no change, with Chl a remaining between 0.16 and 0.18 mg m⁻³ across the observed 37.5--38.5 ppm range. -->
