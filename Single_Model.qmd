@@ -686,6 +686,44 @@ utils::zip(zipfile = zip_file, files = files)
 
 ```
 
+```{r interaction Nutri Ratio}
+#| cache: false
+#| echo: false
+#| eval: false
+#| warning: false
+
+f_int <- bf(
+  GeoMean_Chla_log_scaled ~
+    s(SST,      by = Box) +
+    s(N_P,      by = Box) +
+    s(sum_Nutri,by = Box) +
+    t2(N_P, sum_Nutri, by = Box) +   # ← pure interaction surface
+    s(MLD,      by = Box)
+)
+
+# )
+fit_int <- brm(
+  formula = f_int,
+  data = df_wide_STD,
+  family = student(),
+  chains = 4, cores = 15,
+  iter = 5000,
+  warmup = 500,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/A_Model_Unique_Log_STD_5000_Student_SST_NP_Nutri_MLD_INT")
+
+ce <- conditional_effects(
+  fit_int,                               # <-- model that *includes* the ti() interaction
+  effects    = "N_P:sum_Nutri",          # two-way interaction surface
+  conditions = list(Box = "Lyon"),       # restrict to Lyon
+  surface    = TRUE,                     # 2-D coloured surface instead of ribbons
+  re_formula = NA                        # drop group-level variability if present
+)
+plot(ce, rug = TRUE)
+
+```
+
+
 
 ::: {style="text-align: center; margin-top: 20px;"}
 <button onclick="window.open(&#39;https://github.com/SigOiry/GAM_Chla_MedSea/raw/refs/heads/main/output.zip&#39;, &#39;_blank&#39;);" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
