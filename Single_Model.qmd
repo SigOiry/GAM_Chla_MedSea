@@ -23,7 +23,7 @@ library(Utilities.Package)
 ```{r Open Chlorophyll}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 # Read in
@@ -46,7 +46,7 @@ df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFact
 ```{r Open HF}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
@@ -76,7 +76,7 @@ rm(df_HF_Chipre)
 ```{r Open MLD}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
@@ -106,7 +106,7 @@ rm(df_MLD_Chipre)
 ```{r Open NH4}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 
@@ -136,7 +136,7 @@ rm(df_NH4_Chipre)
 ```{r Open NO3}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 
@@ -166,7 +166,7 @@ rm(df_NO3_Chipre)
 ```{r Open PO4}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
@@ -195,7 +195,7 @@ rm(df_PO4_Chipre)
 ```{r Open SSS}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
@@ -224,7 +224,7 @@ rm(df_SSS_Chipre)
 ```{r Open SST}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
@@ -245,7 +245,7 @@ df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFacto
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 date_min <- dmy("01-01-2018")
 date_max <- dmy("01-01-2021")
@@ -294,7 +294,7 @@ colscale <- c("Adriatic" = "goldenrod","Lyon" = "darkgreen","Cyprus" = "darkred"
 ```{r model unique}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 library(brms)
@@ -313,14 +313,15 @@ df_wide_all <- df_wide %>%
   dplyr::select(-c(PO4,NO3,NH4,DIN))
 
 df_wide_STD <- df_wide_all %>%
-  group_by(Box) %>% 
+  group_by(Box) %>%
   mutate(GeoMean_Chla_log_scaled = log(GeoMean_Chla),
-         across(c(GeoMean_Chla_log_scaled,SST, SSS, N_P, sum_Nutri, MLD, HF),
-                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )),)
+         across(c(GeoMean_Chla ,SST, SSS, N_P, sum_Nutri, MLD, HF),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
 
-  
-ggplot(df_wide_STD, aes(x = GeoMean_Chla_log_scaled)) +
-  geom_histogram()
+
+ggplot(df_wide_STD, aes(x = SST)) +
+  geom_histogram()+
+  facet_wrap(~Box)
 # pairs(df_wide_Cyprus_STD %>% dplyr::select(-Box))
 
 df_back_to_raw <- df_wide_all %>% 
@@ -346,26 +347,42 @@ df_back_to_raw <- df_wide_all %>%
 fit_all <- brm(
   formula = GeoMean_Chla_log_scaled ~
     s(SST, by = Box) + s(N_P, by = Box) +
-    s(sum_Nutri, by = Box) + s(MLD, by = Box),
+    s(sum_Nutri, by = Box),
   data = df_wide_STD,
-  family = student(),
+  family = Gamma(),
   chains = 4, cores = 15,
   iter = 5000,
   warmup = 500,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/A_Model_Unique_Log_STD_5000_Student_SST_NP_Nutri_MLD"
+  file = "Data/Model/A_Model_Unique_Log_STD_5000_Student_SST_NP_Nutri"
 )
 
+fit_all_2 <- brm(
+  formula = GeoMean_Chla ~
+    s(SST, by = Box) + s(N_P, by = Box) +
+    s(sum_Nutri, by = Box),
+  data = df_wide_STD,
+  family = student(),
+  chains = 4, cores = 15,
+  iter = 1000,
+  warmup = 100,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/A_Model_Unique_STD_all_1000_Student_SST_NP_Nutri"
+)
+# 
+# 
+# plot(fit_all)
+# summary(fit_all)
 
-plot(fit_all)
-summary(fit_all)
+plot(conditional_smooths(fit_all_2))
+
 
 ```
 
 ```{r manual dataset building}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 library(tidyverse)
@@ -435,7 +452,7 @@ make_newdata <- function(region, variable_name, model_data, n_points = 100) {
 }
 
 # Loop over variables and regions, get fitted values
-variables <- c("SST", "N_P", "sum_Nutri", "MLD")
+variables <- c("SST", "N_P", "sum_Nutri")
 all_preds <- list()
 
 for (var in variables) {
@@ -448,7 +465,7 @@ for (var in variables) {
     all_preds[[paste(reg, var, sep = "_")]] <- preds
   }
 }
-
+# tidybayes::add_linpred_draws()
 # Combine all into one dataframe
 df_all_preds <- bind_rows(all_preds)
 ```
@@ -456,7 +473,7 @@ df_all_preds <- bind_rows(all_preds)
 ```{r NP}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_NP_Manual <- df_all_preds %>% filter(Variable == "N_P") %>% 
@@ -511,7 +528,7 @@ write.csv(df_NP_Manual,"Shinyapp/Result_MedSea/df_NP_Raw.csv", row.names = F)
 ```{r MLD}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 
@@ -546,14 +563,14 @@ df_MLD_Relatif <- df_all_preds %>% filter(Variable == "MLD") %>%
          Estimate = Estimate /mean(Estimate),
          MLD =MLD/mean(MLD))
 
-(p5 <- df_MLD_Manual %>% 
+p5 <- df_MLD_Manual %>% 
   ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
   geom_line() +
   scale_color_manual(values = colscale)+
   scale_fill_manual(values = colscale)+
   geom_ribbon(alpha = 0.2, color = NA) +
   labs(title = "Marginal effect of MLD on Chla", y = "Chla (mg/m³)", x = "MLD") +
-  theme_minimal())
+  theme_minimal()
 
 # setwd("../")
 
@@ -567,7 +584,7 @@ write.csv(df_MLD_Relatif,"Shinyapp/Result_MedSea/df_MLD_Raw.csv", row.names = F)
 ```{r Sum_Nutri}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 
@@ -602,14 +619,14 @@ df_sum_Nutri_Relatif <- df_all_preds %>% filter(Variable == "sum_Nutri") %>%
          Estimate = Estimate /mean(Estimate),
          sum_Nutri =sum_Nutri/mean(sum_Nutri))
 
-(p4 <- df_sum_Nutri_Relatif %>% 
+p4 <- df_sum_Nutri_Relatif %>% 
   ggplot(aes(x = sum_Nutri, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
   geom_line() +
   scale_color_manual(values = colscale)+
   scale_fill_manual(values = colscale)+
   geom_ribbon(alpha = 0.2, color = NA) +
   labs(title = "Marginal effect of sum_Nutri on Chla", y = "Chla (mg/m³)", x = "sum_Nutri") +
-  theme_minimal())
+  theme_minimal()
 
 write.csv(df_sum_Nutri_Relatif,"Outputs/df_Sum_Nutri_Relatif.csv", row.names = F)
 write.csv(df_sum_Nutri_Manual,"Outputs/df_Sum_Nutri_Raw.csv", row.names = F)
@@ -621,7 +638,7 @@ write.csv(df_sum_Nutri_Manual,"Shinyapp/Result_MedSea/df_Sum_Nutri_Raw.csv", row
 ```{r SST}
 #| cache: false
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 
 df_SST_Manual <- df_all_preds %>% filter(Variable == "SST") %>% 
@@ -655,14 +672,14 @@ df_SST_Relatif <- df_all_preds %>% filter(Variable == "SST") %>%
          Estimate = Estimate /mean(Estimate),
          SST =SST/mean(SST))
 
-(p2 <- df_SST_Relatif %>% 
+p2 <- df_SST_Relatif %>% 
   ggplot(aes(x = SST, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
   geom_line() +
   scale_color_manual(values = colscale)+
   scale_fill_manual(values = colscale)+
   geom_ribbon(alpha = 0.2, color = NA) +
   labs(title = "Marginal effect of SST on Chla", y = "Chla (mg/m³)", x = "SST") +
-  theme_minimal())
+  theme_minimal()
 
 write.csv(df_SST_Relatif,"Outputs/df_SST_Relatif.csv", row.names = F)
 write.csv(df_SST_Manual,"Outputs/df_SST_Raw.csv", row.names = F)
@@ -750,6 +767,54 @@ Download Results of the modeling
 </iframe>
 
 
+```{r plot paper}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+library(tidyverse)
+
+df_wider_all <- df %>% 
+  pivot_wider(names_from = Metric, values_from = Value) %>%
+  mutate(SumNutri = PO4+NO3+NH4,
+         NP = (NO3+NH4)/PO4) %>% 
+  dplyr::select(-c(Date,STD_Chla, SSS,HF,PO4,NO3,NH4,MLD)) %>% 
+  pivot_longer(-c(Box,GeoMean_Chla), names_to = "metric",values_to = "value")
+
+df_SST <- df_SST_Manual %>% 
+  dplyr::select(-c(Est.Error,N_P,sum_Nutri,MLD,metrics)) %>% 
+  mutate(metric = "SST") %>% 
+  rename(value = "SST")
+
+df_NP <- df_NP_Manual %>% 
+  dplyr::select(-c(Est.Error,SST,sum_Nutri,MLD,metrics)) %>% 
+  mutate(metric = "NP") %>% 
+  rename(value = "N_P")
+
+df_SumNutri <- df_sum_Nutri_Manual %>% 
+  dplyr::select(-c(Est.Error,SST,N_P,MLD,metrics)) %>% 
+  mutate(metric = "SumNutri") %>% 
+  rename(value = "sum_Nutri")
+  
+df_all_finale_plot <- rbind(df_SST,df_NP,df_SumNutri)
+
+ 
+ ggplot()+
+  geom_line(data = df_all_finale_plot, aes(x = value , y = Estimate))+
+  geom_ribbon(data = df_all_finale_plot, aes(x = value , y = Estimate, ymin = Q2.5, ymax = Q97.5, fill = Box),alpha = 0.2, color = NA)+
+  geom_point(data = df_wider_all, aes(x = value, y = GeoMean_Chla), color = "grey", alpha = 0.5)+
+  facet_wrap(Box ~ metric  ,ncol=3,scales = "free")
+
+ggplot(data = df_wider_all, aes(x = value, y = GeoMean_Chla))+
+  # geom_line(data = df_all_finale_plot, aes(x = value , y = Estimate))+
+  # geom_ribbon(data = df_all_finale_plot, aes(x = value , y = Estimate, ymin = Q2.5, ymax = Q97.5, fill = Box),alpha = 0.2, color = NA)+
+  geom_point(color = "grey", alpha = 0.5)+
+  # geom_smooth(method = "gam")+
+  facet_wrap(Box~metric ,ncol=3,scales = "free")
+
+
+```
 
 
 

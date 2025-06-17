@@ -4,8 +4,8 @@ library(patchwork)
 # library(Utilities.Package)
 
 
-df_MLD_Manual <- read.csv("df_MLD_Raw.csv")
-df_MLD_Relatif <- read.csv("df_MLD_Relatif.csv")
+# df_MLD_Manual <- read.csv("df_MLD_Raw.csv")
+# df_MLD_Relatif <- read.csv("df_MLD_Relatif.csv")
 df_SST_Manual <- read.csv("df_SST_Raw.csv")
 df_SST_Relatif <- read.csv("df_SST_Relatif.csv")
 df_sum_Nutri_Manual <- read.csv("df_Sum_Nutri_Raw.csv")
@@ -22,25 +22,25 @@ colpal <- c("Adriatic" = "goldenrod","Lyon" = "darkgreen","Cyprus" = "darkred")
 
 
 
-p1 <- df_MLD_Manual %>% 
-    ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
-    geom_line() +
-    scale_color_manual(values = colpal)+
-    scale_fill_manual(values = colpal)+
-    facet_wrap(~Box)+
-    geom_ribbon(alpha = 0.2, color = NA) +
-    labs(title = "Marginal effect of MLD on Chla in raw scales", y = "Chla (mg/m³)", x = "MLD (m)") +
-    theme_minimal()
-
-p2 <- df_MLD_Relatif %>% 
-    ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
-    geom_line() +
-    scale_color_manual(values = colpal)+
-    scale_fill_manual(values = colpal)+
-    facet_wrap(~Box)+
-    geom_ribbon(alpha = 0.2, color = NA) +
-    labs(title = "Marginal effect of MLD on Chla in relative scales", y = "Relative Chla", x = "Relative MLD") +
-    theme_minimal()
+# p1 <- df_MLD_Manual %>% 
+#     ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+#     geom_line() +
+#     scale_color_manual(values = colpal)+
+#     scale_fill_manual(values = colpal)+
+#     facet_wrap(~Box)+
+#     geom_ribbon(alpha = 0.2, color = NA) +
+#     labs(title = "Marginal effect of MLD on Chla in raw scales", y = "Chla (mg/m³)", x = "MLD (m)") +
+#     theme_minimal()
+# 
+# p2 <- df_MLD_Relatif %>% 
+#     ggplot(aes(x = MLD, y = Estimate, ymin = Q2.5, ymax = Q97.5, color = Box, fill = Box)) +
+#     geom_line() +
+#     scale_color_manual(values = colpal)+
+#     scale_fill_manual(values = colpal)+
+#     facet_wrap(~Box)+
+#     geom_ribbon(alpha = 0.2, color = NA) +
+#     labs(title = "Marginal effect of MLD on Chla in relative scales", y = "Relative Chla", x = "Relative MLD") +
+#     theme_minimal()
 
 
 p3 <- df_SST_Manual %>% 
@@ -105,9 +105,9 @@ p8 <- df_NP_Relatif %>%
   labs(title = "Marginal effect of NPratio on Chla in relative scales", y = "Relative Chla", x = "Relative Ratio N/P") +
   theme_minimal()
 
-plot_MLD_RAW <- p1
+# plot_MLD_RAW <- p1
 
-plot_MLD_Relative <- p2
+# plot_MLD_Relative <- p2
 
 plot_SST_RAW <- p3
 
@@ -151,13 +151,13 @@ library(bslib)    # needed only if you create/modify the ggplots here
 
 plots <- list(
     Raw = list(
-        MLD = plot_MLD_RAW,
+        # MLD = plot_MLD_RAW,
         SST       = plot_SST_RAW,
         Nutriment  = plot_Nutri_Raw,
         `Ratio N/P` = plot_NP_Raw
     ),
     Relative = list(
-        MLD = plot_MLD_Relative,
+        # MLD = plot_MLD_Relative,
         SST       = plot_SST_Relative,
         Nutriment  = plot_Nutri_Relatives,
         `Ratio N/P` = plot_NP_Relatives
