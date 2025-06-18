@@ -5,7 +5,7 @@ project:
     - index.qmd
     - Models_done_Right.qmd
     - Seasonality_variables.qmd
-
+    - Model_with_lags.qmd
 website:
   title: "Chla Variability of the Med Sea"
   navbar:
@@ -16,6 +16,8 @@ website:
         text: Results
       - href: Seasonality_variables.qmd
         text: Temporality of Variables
+      - href: Model_with_lags.qmd
+        text: Model with lags
 format:
   html:
     theme:

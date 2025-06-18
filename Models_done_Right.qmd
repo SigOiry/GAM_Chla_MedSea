@@ -513,7 +513,7 @@ geom_ribbon(aes(ymax = ymax,ymin=ymin,
 geom_line(colour="black",size = 1)+
         scale_fill_manual(values = colscale)+
 
-  facet_wrap(~Box,scales = "free")+
+  facet_wrap(~Box)+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("SST (°C)")+
   theme_bw()
@@ -604,7 +604,7 @@ geom_ribbon(aes(ymax = ymax,ymin=ymin,
               fill=Box),
               alpha=0.4)+
 geom_line(colour="black", size =1)+
-  facet_wrap(~Box,scales = "free")+
+  facet_wrap(~Box)+
     scale_fill_manual(values = colscale)+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("Nitrogen/Phosphorus")+
@@ -696,7 +696,7 @@ geom_ribbon(aes(ymax = ymax,ymin=ymin,
               fill=Box),
               alpha=0.4)+
 geom_line(colour="black" ,linewidth = 1)+
-  facet_wrap(~Box,scales = "free")+
+  facet_wrap(~Box)+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("Sum of Nutrient (mmol.m⁻³)")+
   scale_fill_manual(values = colscale)+

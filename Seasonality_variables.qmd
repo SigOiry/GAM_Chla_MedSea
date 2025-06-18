@@ -341,13 +341,25 @@ df %>%
 
 df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
 
+Clim_SST <- df_wide %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month,Box) %>% 
+  reframe(med = median(SST))
+
+df_wide_SST <- df_wide %>% 
+  dplyr::select(c(Year,Date,Box,SST)) %>% 
+  mutate(month = month(Date)) %>% 
+  left_join(Clim_SST, by = c("month","Box")) %>%
+  mutate(SST = SST - med) %>% 
+  dplyr::select(-c(med,month))
+
 fit_SST <- brm(
-  SST ~ s(Year, by = Box),
-  data = df_wide,
-  family = Gamma(link = "log"),  # log link ensures positivity
+   SST ~ Year * Box,
+  data = df_wide_SST,
+  family = gaussian(),  # log link ensures positivity
   chains = 4, cores = 10,
   control = list(adapt_delta = 0.95),
-  file = "Data/Model/Environment_Variables/fit_SST_year"
+  file = "Data/Model/Environment_Variables/fit_SST_year_glm"
 )
 
 conditional_effects(fit_SST, effects = "Year:Box",      
@@ -356,11 +368,11 @@ conditional_effects(fit_SST, effects = "Year:Box",
   ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
   geom_line(color = "black")+
   geom_ribbon(color =NA, alpha = 0.2)+
-  facet_wrap(~Box, scales = "free")+
+  facet_wrap(~Box)+
   theme_minimal()+
   scale_fill_manual(values = colscale)+
   theme(legend.position = "top")+
-  labs(y = "SST (°C)")
+  labs(y = "Anomalies of SST")
   
 
 
@@ -377,13 +389,27 @@ conditional_effects(fit_SST, effects = "Year:Box",
 
 df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
 
+
+Clim_NPratio <- df_wide %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month,Box) %>% 
+  reframe(med = median(NPratio))
+
+df_wide_NPratio <- df_wide %>% 
+  dplyr::select(c(Year,Date,Box,NPratio)) %>% 
+  mutate(month = month(Date)) %>% 
+  left_join(Clim_NPratio, by = c("month","Box")) %>%
+  mutate(NPratio = NPratio - med) %>% 
+  dplyr::select(-c(med,month))
+
+
 fit_NPratio <- brm(
-  NPratio ~ s(Year, by = Box),
-  data = df_wide,
-  family = Gamma(link = "log"),  # log link ensures positivity
+  NPratio ~ Year * Box,
+  data = df_wide_NPratio,
+  family = student(),  # log link ensures positivity
   chains = 4, cores = 10,
   control = list(adapt_delta = 0.95),
-  file = "Data/Model/Environment_Variables/fit_NPratio_year"
+  file = "Data/Model/Environment_Variables/fit_NPratio_year_glm"
 )
 
 conditional_effects(fit_NPratio, effects = "Year:Box")[[1]] %>% 
@@ -391,11 +417,11 @@ conditional_effects(fit_NPratio, effects = "Year:Box")[[1]] %>%
   ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
   geom_line(color = "black")+
   geom_ribbon(color =NA, alpha = 0.2)+
-  facet_wrap(~Box, scales = "free")+
+  facet_wrap(~Box)+
   theme_minimal()+
   scale_fill_manual(values = colscale)+
   theme(legend.position = "top")+
-  labs(y = "NPratio")
+  labs(y = "Anomalies of NPratio")
 ```
 
 ## Trends of Total Nutrient Load
@@ -409,13 +435,29 @@ conditional_effects(fit_NPratio, effects = "Year:Box")[[1]] %>%
 
 df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
 
+
+
+Clim_TotalNutrient <- df_wide %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month,Box) %>% 
+  reframe(med = median(TotalNutrient))
+
+df_wide_TotalNutrient <- df_wide %>% 
+  dplyr::select(c(Year,Date,Box,TotalNutrient)) %>% 
+  mutate(month = month(Date)) %>% 
+  left_join(Clim_TotalNutrient, by = c("month","Box")) %>%
+  mutate(TotalNutrient = TotalNutrient - med) %>% 
+  dplyr::select(-c(med,month))
+
+
+
 fit_TotalNutrient <- brm(
-  TotalNutrient ~ s(Year, by = Box),
-  data = df_wide,
-  family = Gamma(link = "log"),  # log link ensures positivity
+  TotalNutrient ~ Year * Box,
+  data = df_wide_TotalNutrient,
+  family = student(),  # log link ensures positivity
   chains = 4, cores = 10,
   control = list(adapt_delta = 0.95),
-  file = "Data/Model/Environment_Variables/fit_TotalNutrient_year"
+  file = "Data/Model/Environment_Variables/fit_TotalNutrient_year_glm"
 )
 
 conditional_effects(fit_TotalNutrient, effects = "Year:Box")[[1]] %>% 
@@ -423,11 +465,11 @@ conditional_effects(fit_TotalNutrient, effects = "Year:Box")[[1]] %>%
   ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
   geom_line(color = "black")+
   geom_ribbon(color =NA, alpha = 0.2)+
-  facet_wrap(~Box, scales = "free")+
+  facet_wrap(~Box)+
   theme_minimal()+
   scale_fill_manual(values = colscale)+
   theme(legend.position = "top")+
-  labs(y = "Nutrient Load (mmol.m⁻³)")
+  labs(y = "Anomalies of Nutrient Load")
 ```
 
 ## Trends of PO4
@@ -442,13 +484,26 @@ conditional_effects(fit_TotalNutrient, effects = "Year:Box")[[1]] %>%
 
 df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
 
+Clim_PO4 <- df_wide %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month,Box) %>% 
+  reframe(med = median(PO4))
+
+df_wide_PO4 <- df_wide %>% 
+  dplyr::select(c(Year,Date,Box,PO4)) %>% 
+  mutate(month = month(Date)) %>% 
+  left_join(Clim_PO4, by = c("month","Box")) %>%
+  mutate(PO4 = PO4 - med) %>% 
+  dplyr::select(-c(med,month))
+
+
 fit_PO4 <- brm(
-  PO4 ~ s(Year, by = Box),
-  data = df_wide,
-  family = Gamma(link = "log"),  # log link ensures positivity
+  PO4 ~ Year * Box,
+  data = df_wide_PO4,
+  family = student(),  # log link ensures positivity
   chains = 4, cores = 10,
   control = list(adapt_delta = 0.95),
-  file = "Data/Model/Environment_Variables/fit_PO4_year"
+  file = "Data/Model/Environment_Variables/fit_PO4_year_glm"
 )
 
 conditional_effects(fit_PO4, effects = "Year:Box")[[1]] %>% 
@@ -456,11 +511,11 @@ conditional_effects(fit_PO4, effects = "Year:Box")[[1]] %>%
   ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
   geom_line(color = "black")+
   geom_ribbon(color =NA, alpha = 0.2)+
-  facet_wrap(~Box, scales = "free")+
+  facet_wrap(~Box)+
   theme_minimal()+
   scale_fill_manual(values = colscale)+
   theme(legend.position = "top")+
-  labs(y = "PO4 concentration")
+  labs(y = "Anomalies of PO4 concentration")
 ```
 
 ## Trends of NH4
@@ -474,13 +529,24 @@ conditional_effects(fit_PO4, effects = "Year:Box")[[1]] %>%
 
 df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
 
+Clim_NH4 <- df_wide %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month,Box) %>% 
+  reframe(med = median(NH4))
+
+df_wide_NH4 <- df_wide %>% 
+  dplyr::select(c(Year,Date,Box,NH4)) %>% 
+  mutate(month = month(Date)) %>% 
+  left_join(Clim_NH4, by = c("month","Box")) %>%
+  mutate(NH4 = NH4 - med)
+
 fit_NH4 <- brm(
-  NH4 ~ s(Year, by = Box),
-  data = df_wide,
-  family = Gamma(link = "log"),  # log link ensures positivity
+  NH4 ~ Year * Box,,
+  data = df_wide_NH4,
+  family = student(),  # log link ensures positivity
   chains = 4, cores = 10,
   control = list(adapt_delta = 0.95),
-  file = "Data/Model/Environment_Variables/fit_NH4_year"
+  file = "Data/Model/Environment_Variables/fit_NH4_year_glm"
 )
 
 conditional_effects(fit_NH4, effects = "Year:Box")[[1]] %>% 
@@ -488,11 +554,11 @@ conditional_effects(fit_NH4, effects = "Year:Box")[[1]] %>%
   ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
   geom_line(color = "black")+
   geom_ribbon(color =NA, alpha = 0.2)+
-  facet_wrap(~Box, scales = "free")+
+  facet_wrap(~Box)+
   theme_minimal()+
   scale_fill_manual(values = colscale)+
   theme(legend.position = "top")+
-  labs(y = "NH4 concentration")
+  labs(y = "Anomalies of NH4 concentration")
 ```
 
 

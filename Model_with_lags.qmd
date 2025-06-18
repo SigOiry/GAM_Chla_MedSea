@@ -1,0 +1,775 @@
+---
+title: "Models_with_lags"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r library}
+#| cache: false
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(lubridate)
+library(brms)
+library(purrr)
+library(dplyr)
+library(Utilities.Package)
+```
+
+```{r Open Chlorophyll}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+# Read in
+df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = case_when(str_detect(metric,"GEOM") ~ "GeoMean_Chla",
+                            T ~ "STD_Chla")) %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+
+
+```
+
+```{r Open HF}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_HF_Lyon <- read.csv("Data/Variables_values/Monthly_HF_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_HF_Chipre <- read.csv("Data/Variables_values/Monthly_HF_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_HF <- rbind(df_HF_Adriatic,df_HF_Lyon,df_HF_Chipre)
+
+rm(df_HF_Adriatic)
+rm(df_HF_Lyon)
+rm(df_HF_Chipre)
+
+
+```
+
+```{r Open MLD}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
+
+df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_MLD <- rbind(df_MLD_Lyon,df_MLD_Adriatic,df_MLD_Chipre)
+
+rm(df_MLD_Adriatic)
+rm(df_MLD_Lyon)
+rm(df_MLD_Chipre)
+
+```
+
+```{r Open NH4}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NH4 <- rbind(df_NH4_Lyon,df_NH4_Adriatic,df_NH4_Chipre)
+
+rm(df_NH4_Adriatic)
+rm(df_NH4_Lyon)
+rm(df_NH4_Chipre)
+
+```
+
+```{r Open NO3}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
+
+rm(df_NO3_Lyon)
+rm(df_NO3_Adriatic)
+rm(df_NO3_Chipre)
+
+```
+
+```{r Open PO4}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_PO4 <- rbind(df_PO4_Lyon,df_PO4_Adriatic,df_PO4_Chipre)
+
+rm(df_PO4_Lyon)
+rm(df_PO4_Adriatic)
+rm(df_PO4_Chipre)
+
+```
+
+```{r Open SSS}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_SSS <- rbind(df_SSS_Lyon,df_SSS_Adriatic,df_SSS_Chipre)
+
+rm(df_SSS_Lyon)
+rm(df_SSS_Adriatic)
+rm(df_SSS_Chipre)
+
+```
+
+```{r Open SST}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = "SST") %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+```
+
+```{r stack all}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: true
+
+
+df_chla <- df_chla %>% 
+  dplyr::filter(Date >= min(df_HF$Date), 
+                Date <= max(df_HF$Date))
+
+df <- df_chla %>%
+  left_join(df_SST,  by = c("Box", "Date")) %>%
+  left_join(df_SSS,  by = c("Box", "Date")) %>%
+  left_join(df_PO4,  by = c("Box", "Date")) %>%
+  left_join(df_NO3,  by = c("Box", "Date")) %>%
+  left_join(df_NH4,  by = c("Box", "Date")) %>%
+  left_join(df_MLD,  by = c("Box", "Date")) %>%
+  left_join(df_HF,   by = c("Box", "Date")) %>% 
+  mutate(NPratio = (NO3+NH4)/PO4,
+         TotalNutrient = NO3+NH4+PO4,
+         Box = as.factor(Box)) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
+  ungroup()
+
+
+
+write.csv(df,"Data/df.all.csv", row.names = F)
+
+# df %>% 
+#   # dplyr::filter(Date >= date_min, 
+#                 # Date <= date_max) %>% 
+#   ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
+#   geom_point()+
+#   geom_line()+
+#   # geom_smooth(method = "gam")+
+#   facet_wrap(~Metric,scales = "free")+
+#   theme_bw()
+
+df_wide <- df %>% 
+  pivot_wider(names_from = Metric,values_from = Value) %>%
+  mutate(
+    across(
+      # select all except these four
+      -c(Date, Box, GeoMean_Chla, STD_Chla),
+      # replace by its one‐row lag
+      ~lag(., n=3)
+    )
+  ) %>% 
+  drop_na()
+  
+
+# pairs(df_wide %>% dplyr::select(-Box))
+
+colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
+```
+
+```{r DF_model_Lag}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+df_wide_all <- df_wide %>%
+  # dplyr::filter(Box == "Cyprus") %>%
+  mutate(
+    DIN  = NO3 + NH4,
+    N_P  = DIN / PO4,
+    # log_N_P = log1p(N_P),
+    sum_Nutri = NO3 + NH4 + PO4,
+    Box = as.factor(Box)
+  ) %>%
+  dplyr::select(-c(PO4,NO3,NH4,DIN,HF,MLD,SSS,STD_Chla))
+
+df_wide_STD <- df_wide_all %>%
+  # group_by(Box) %>%
+  mutate(across(c(GeoMean_Chla ,SST, N_P, sum_Nutri),
+                ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
+
+df_back_to_raw <- df_wide_all %>% 
+  pivot_longer(-c(Date,Box), names_to = "metrics", values_to = "values") %>% 
+  group_by(metrics) %>% 
+  reframe(avg = mean(values,na.rm = T),
+          sd = sd(values,na.rm = T))
+
+fit_all <- brm(
+  formula = GeoMean_Chla ~
+    s(SST, by = Box) + s(N_P, by = Box) +
+    s(sum_Nutri, by = Box),
+  data = df_wide_STD,
+  family = student(),
+  chains = 4, cores = 15,
+  iter = 1000,
+  warmup = 100,
+  control = list(adapt_delta = 0.97,  max_treedepth = 15),
+  file = "Data/Model/A_Model_Unique_STD_all_1000_Student_SST_NP_Nutri_Lag"
+)
+```
+
+```{r new Data_Entire_Model}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Adriatic<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),length.out=15),
+                          N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),length.out=15),
+                          sum_Nutri=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),length.out=15)) %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Lyon<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),length.out=15),
+                          N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),length.out=15),
+                          sum_Nutri=seq(
+                            min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),
+                            max(df_wide_STD %>% 
+                                  dplyr::filter(Box == "Lyon") %>% 
+                                  pull(sum_Nutri)),
+                            length.out=15)) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Cyprus<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),length.out=15),
+                          N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),length.out=15),
+                          sum_Nutri=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),length.out=15)) %>% 
+  mutate(Box = "Cyprus")
+
+NewData_all <- rbind(NewData_Cyprus,NewData_Lyon,NewData_Adriatic) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData1_brms<-NewData_all%>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+# (p3_Prop<-NewData1_brms%>%
+#   group_by(Box,N_P)%>%
+#   reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+#   # ungroup() %>% 
+#   # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+#   ggplot(aes(x = N_P,y=y)) +
+# geom_ribbon(aes(ymax = ymax,ymin=ymin),
+#               alpha=0.2,
+#               fill="darkcyan")+
+# geom_line(colour="darkcyan")+
+#   facet_wrap(~Box,scales = "free"))
+```
+
+```{r new Data_SST}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),length.out=200),
+                          N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),length.out=200),
+                          N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),length.out=200),
+                          N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Cyprus")
+
+NewData_SST <- rbind(NewData_Cyprus_SST,NewData_Lyon_SST,NewData_Adriatic_SST) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_SST_brms<-NewData_SST%>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_SST_df<-NewData_SST_brms%>%
+  group_by(Box,SST)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(SST = SST*df_back_to_raw %>% 
+             dplyr::filter(metrics == "SST") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "SST") %>% 
+             pull(avg))
+
+conditional_Plot_SST_df_lag <- conditional_Plot_SST_df%>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = SST,y=y)) +
+geom_ribbon(aes(ymax = ymax,ymin=ymin,
+              fill=Box),
+              alpha=0.4)+
+geom_line(colour="black",size = 1)+
+        scale_fill_manual(values = colscale)+
+
+  facet_wrap(~Box, scales = "free")+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("SST (°C)")+
+  theme_bw()
+
+write.csv(conditional_Plot_SST_df, "Outputs/Conditional_plots/SST_lag.csv",row.names = F)
+
+```
+
+```{r new Data_N_P}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),length.out=200),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),length.out=200),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),length.out=200),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri))) %>% 
+  mutate(Box = "Cyprus")
+
+NewData_N_P <- rbind(NewData_Cyprus_N_P,NewData_Lyon_N_P,NewData_Adriatic_N_P) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_N_P_brms<-NewData_N_P%>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_N_P_df<-NewData_N_P_brms%>%
+  group_by(Box,N_P)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(N_P = N_P*df_back_to_raw %>% 
+             dplyr::filter(metrics == "N_P") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "N_P") %>% 
+             pull(avg)) 
+
+conditional_Plot_N_P_df_lag <-  conditional_Plot_N_P_df %>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = N_P,y=y)) +
+geom_ribbon(aes(ymax = ymax,ymin=ymin,
+              fill=Box),
+              alpha=0.4)+
+geom_line(colour="black", size =1)+
+  facet_wrap(~Box, scales = "free")+
+    scale_fill_manual(values = colscale)+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("Nitrogen/Phosphorus")+
+  theme_bw()
+
+write.csv(conditional_Plot_N_P_df, "Outputs/Conditional_plots/NPratios_lag.csv",row.names = F)
+
+```
+
+```{r new sum_Nutri}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                          sum_Nutri=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),length.out=200)) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                          sum_Nutri=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),length.out=200))  %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                          sum_Nutri=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),length.out=200))  %>% 
+  mutate(Box = "Cyprus")
+
+NewData_sum_Nutri <- rbind(NewData_Cyprus_sum_Nutri,NewData_Lyon_sum_Nutri,NewData_Adriatic_sum_Nutri) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_sum_Nutri_brms<-NewData_sum_Nutri %>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_sum_Nutri_df<-NewData_sum_Nutri_brms%>%
+  group_by(Box,sum_Nutri)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(sum_Nutri = sum_Nutri*df_back_to_raw %>% 
+             dplyr::filter(metrics == "sum_Nutri") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "sum_Nutri") %>% 
+             pull(avg)) 
+
+conditional_Plot_sum_Nutri_df_lag <- conditional_Plot_sum_Nutri_df %>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = sum_Nutri,y=y)) +
+geom_ribbon(aes(ymax = ymax,ymin=ymin,
+              fill=Box),
+              alpha=0.4)+
+geom_line(colour="black" ,linewidth = 1)+
+  facet_wrap(~Box, scales = "free")+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("Sum of Nutrient (mmol.m⁻³)")+
+  scale_fill_manual(values = colscale)+
+  theme_bw()
+
+write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad_lag.csv",row.names = F)
+```
+
+```{r combined plot}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+# Combine into a 3x3 layout
+combined_plot_lag <- (conditional_Plot_SST_df_lag / conditional_Plot_N_P_df_lag / conditional_Plot_sum_Nutri_df_lag) + 
+  plot_layout(nrow = 3, ncol = 1, guides = "collect") & 
+  theme(aspect.ratio = 1) &
+  theme(legend.position = "top")# Makes each panel square
+
+# Show plot
+combined_plot_lag
+
+
+ggsave("Outputs/plot_all_variable_per_Box_lag.png", height = 10, width = 9.03, unit = "in", dpi = 300)
+```
+
+```{r zip outputs}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+# ---- settings ----
+folder_to_zip <- "Outputs/Conditional_plots"   # directory whose contents you want to archive
+zip_file      <- "output_lag.zip"
+
+# ---- create the zip ----
+# list all files (recursive = TRUE grabs sub-folders too; set FALSE if you only
+# want the top-level files)
+files <- list.files(folder_to_zip, recursive = TRUE, full.names = TRUE)
+
+files_to_zip <- files[str_detect(files,"lag")]
+
+# make sure you’re in the folder so the archive has relative paths, not full paths
+
+utils::zip(zipfile = zip_file, files = files_to_zip)
+```
+
+::: {style="text-align: center; margin-top: 20px;"}
+<button onclick="window.open(&#39;https://github.com/SigOiry/GAM_Chla_MedSea/raw/refs/heads/main/output_lag.zip&#39;, &#39;_blank&#39;);" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+
+Download Data of this plot
+</button>
+:::
+```{r Figs All_Variables_Boxes}
+#| echo: false
+#| warning: false
+#| fig-cap: "Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers of the month before in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (middle) nitrogen∕phosphorus ratio (N∕P), and (bottom) total inorganic nutrient load (mmol m⁻³); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Black lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other two variables at their mean values."
+#| label: fig-Fig_All_Boxes_lag
+#| out-width: "99%"
+
+knitr::include_graphics("Outputs/plot_all_variable_per_Box_lag.png")
+```
