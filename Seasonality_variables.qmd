@@ -295,6 +295,8 @@ colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
 #| fig-height: 10
 
 df %>% 
+  dplyr::filter(Metric != "STD_Chla",
+                Metric != "SSS") %>% 
   ggplot(aes(x = Date, y =  Value, color = Box))+
   geom_line()+
   facet_wrap(~Metric, scales = "free", ncol = 3)+
