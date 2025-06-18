@@ -258,7 +258,8 @@ df <- df_chla %>%
   left_join(df_MLD,  by = c("Box", "Date")) %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
   mutate(NPratio = (NO3+NH4)/PO4,
-         TotalNutrient = NO3+NH4+PO4) %>% 
+         TotalNutrient = NO3+NH4+PO4,
+         Box = as.factor(Box)) %>% 
   pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
   group_by(Metric, Box) %>% 
   mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
@@ -286,6 +287,8 @@ df_wide <- df %>%
 colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
 ```
 
+## Times series of variables
+
 ```{r plot time series}
 #| echo: false
 #| warning: false
@@ -305,6 +308,7 @@ df %>%
 
 ```
 
+## Seasonality of Variables
 ```{r plot Seasonality of variable}
 #| echo: false
 #| warning: false
@@ -312,7 +316,6 @@ df %>%
 #| label: fig-DOY_All
 #| out-width: "99%"
 #| fig-height: 10
-
 
 df %>% 
   dplyr::filter(Metric != "STD_Chla",
@@ -326,4 +329,170 @@ df %>%
   scale_color_manual(values = colscale)
 
 ```
+
+## Trends of SST
+
+```{r trends of SST}
+#| echo: false
+#| warning: false
+#| fig-cap: "Trends of SST"
+#| label: fig-trends_SST
+#| out-width: "99%"
+
+df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
+
+fit_SST <- brm(
+  SST ~ s(Year, by = Box),
+  data = df_wide,
+  family = Gamma(link = "log"),  # log link ensures positivity
+  chains = 4, cores = 10,
+  control = list(adapt_delta = 0.95),
+  file = "Data/Model/Environment_Variables/fit_SST_year"
+)
+
+conditional_effects(fit_SST, effects = "Year:Box",      
+  prob    = 0.80 )[[1]] %>% 
+  dplyr::select(c(Year,Box,estimate__, lower__,upper__)) %>% 
+  ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
+  geom_line(color = "black")+
+  geom_ribbon(color =NA, alpha = 0.2)+
+  facet_wrap(~Box, scales = "free")+
+  theme_minimal()+
+  scale_fill_manual(values = colscale)+
+  theme(legend.position = "top")+
+  labs(y = "SST (°C)")
+  
+
+
+```
+
+## Trends of Nitrogen/Phosphorus
+
+```{r trends of NPratio}
+#| echo: false
+#| warning: false
+#| fig-cap: "Trends of NPratio"
+#| label: fig-trends_NPratio
+#| out-width: "99%"
+
+df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
+
+fit_NPratio <- brm(
+  NPratio ~ s(Year, by = Box),
+  data = df_wide,
+  family = Gamma(link = "log"),  # log link ensures positivity
+  chains = 4, cores = 10,
+  control = list(adapt_delta = 0.95),
+  file = "Data/Model/Environment_Variables/fit_NPratio_year"
+)
+
+conditional_effects(fit_NPratio, effects = "Year:Box")[[1]] %>% 
+  dplyr::select(c(Year,Box,estimate__, lower__,upper__)) %>% 
+  ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
+  geom_line(color = "black")+
+  geom_ribbon(color =NA, alpha = 0.2)+
+  facet_wrap(~Box, scales = "free")+
+  theme_minimal()+
+  scale_fill_manual(values = colscale)+
+  theme(legend.position = "top")+
+  labs(y = "NPratio")
+```
+
+## Trends of Total Nutrient Load
+
+```{r trends of TotalNutrient}
+#| echo: false
+#| warning: false
+#| fig-cap: "Trends of TotalNutrient"
+#| label: fig-trends_TotalNutrient
+#| out-width: "99%"
+
+df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
+
+fit_TotalNutrient <- brm(
+  TotalNutrient ~ s(Year, by = Box),
+  data = df_wide,
+  family = Gamma(link = "log"),  # log link ensures positivity
+  chains = 4, cores = 10,
+  control = list(adapt_delta = 0.95),
+  file = "Data/Model/Environment_Variables/fit_TotalNutrient_year"
+)
+
+conditional_effects(fit_TotalNutrient, effects = "Year:Box")[[1]] %>% 
+  dplyr::select(c(Year,Box,estimate__, lower__,upper__)) %>% 
+  ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
+  geom_line(color = "black")+
+  geom_ribbon(color =NA, alpha = 0.2)+
+  facet_wrap(~Box, scales = "free")+
+  theme_minimal()+
+  scale_fill_manual(values = colscale)+
+  theme(legend.position = "top")+
+  labs(y = "Nutrient Load (mmol.m⁻³)")
+```
+
+## Trends of PO4
+
+```{r trends of PO4}
+#| echo: false
+#| warning: false
+#| fig-cap: "Trends of PO4"
+#| label: fig-trends_PO4
+#| out-width: "99%"
+
+
+df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
+
+fit_PO4 <- brm(
+  PO4 ~ s(Year, by = Box),
+  data = df_wide,
+  family = Gamma(link = "log"),  # log link ensures positivity
+  chains = 4, cores = 10,
+  control = list(adapt_delta = 0.95),
+  file = "Data/Model/Environment_Variables/fit_PO4_year"
+)
+
+conditional_effects(fit_PO4, effects = "Year:Box")[[1]] %>% 
+  dplyr::select(c(Year,Box,estimate__, lower__,upper__)) %>% 
+  ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
+  geom_line(color = "black")+
+  geom_ribbon(color =NA, alpha = 0.2)+
+  facet_wrap(~Box, scales = "free")+
+  theme_minimal()+
+  scale_fill_manual(values = colscale)+
+  theme(legend.position = "top")+
+  labs(y = "PO4 concentration")
+```
+
+## Trends of NH4
+
+```{r trends of NH4}
+#| echo: false
+#| warning: false
+#| fig-cap: "Trends of NH4"
+#| label: fig-trends_NH4
+#| out-width: "99%"
+
+df_wide$Year <- as.numeric(format(df_wide$Date, "%Y")) + (as.numeric(format(df_wide$Date, "%m")) - 1)/12
+
+fit_NH4 <- brm(
+  NH4 ~ s(Year, by = Box),
+  data = df_wide,
+  family = Gamma(link = "log"),  # log link ensures positivity
+  chains = 4, cores = 10,
+  control = list(adapt_delta = 0.95),
+  file = "Data/Model/Environment_Variables/fit_NH4_year"
+)
+
+conditional_effects(fit_NH4, effects = "Year:Box")[[1]] %>% 
+  dplyr::select(c(Year,Box,estimate__, lower__,upper__)) %>% 
+  ggplot(aes(x = Year, y = estimate__,ymin=lower__,ymax=upper__, fill = Box))+
+  geom_line(color = "black")+
+  geom_ribbon(color =NA, alpha = 0.2)+
+  facet_wrap(~Box, scales = "free")+
+  theme_minimal()+
+  scale_fill_manual(values = colscale)+
+  theme(legend.position = "top")+
+  labs(y = "NH4 concentration")
+```
+
 
