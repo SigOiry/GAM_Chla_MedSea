@@ -349,8 +349,9 @@ polygons <- st_transform(polygons, 4326)
 bb <- st_bbox(polygons)
 
 
-color_pal <- c("goldenrod3","darkred","lightgreen")
+color_pal <- c("#4F8EB1","#223F8D","#F6F9A0")
 
+# colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 
 color_pal <- colorFactor(color_pal, polygons$Site)
 color_vec <- color_pal(polygons$Site)

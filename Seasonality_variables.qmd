@@ -1,0 +1,327 @@
+---
+title: "Temporality of variables"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r library}
+#| cache: false
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(lubridate)
+library(brms)
+library(purrr)
+library(dplyr)
+library(Utilities.Package)
+```
+
+```{r Open Chlorophyll}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+# Read in
+df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = case_when(str_detect(metric,"GEOM") ~ "GeoMean_Chla",
+                            T ~ "STD_Chla")) %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+
+
+```
+
+```{r Open HF}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_HF_Lyon <- read.csv("Data/Variables_values/Monthly_HF_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_HF_Chipre <- read.csv("Data/Variables_values/Monthly_HF_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_HF <- rbind(df_HF_Adriatic,df_HF_Lyon,df_HF_Chipre)
+
+rm(df_HF_Adriatic)
+rm(df_HF_Lyon)
+rm(df_HF_Chipre)
+
+
+```
+
+```{r Open MLD}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")%>% 
+  rename(MLD="MLD_mean")
+
+df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_MLD <- rbind(df_MLD_Lyon,df_MLD_Adriatic,df_MLD_Chipre)
+
+rm(df_MLD_Adriatic)
+rm(df_MLD_Lyon)
+rm(df_MLD_Chipre)
+
+```
+
+```{r Open NH4}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NH4 <- rbind(df_NH4_Lyon,df_NH4_Adriatic,df_NH4_Chipre)
+
+rm(df_NH4_Adriatic)
+rm(df_NH4_Lyon)
+rm(df_NH4_Chipre)
+
+```
+
+```{r Open NO3}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
+
+rm(df_NO3_Lyon)
+rm(df_NO3_Adriatic)
+rm(df_NO3_Chipre)
+
+```
+
+```{r Open PO4}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_PO4 <- rbind(df_PO4_Lyon,df_PO4_Adriatic,df_PO4_Chipre)
+
+rm(df_PO4_Lyon)
+rm(df_PO4_Adriatic)
+rm(df_PO4_Chipre)
+
+```
+
+```{r Open SSS}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Adriatic")
+
+df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Cyprus")
+
+df_SSS <- rbind(df_SSS_Lyon,df_SSS_Adriatic,df_SSS_Chipre)
+
+rm(df_SSS_Lyon)
+rm(df_SSS_Adriatic)
+rm(df_SSS_Chipre)
+
+```
+
+```{r Open SST}
+#| cache: false
+#| echo: false
+#| eval: true
+#| warning: false
+
+df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  pivot_longer(-Date, names_to = "metric", values_to = "values") %>% 
+  mutate(Box = gsub(".*_","",metric),
+         Metric = "SST") %>% 
+  select(-metric) %>% 
+  pivot_wider(names_from = Metric, values_from = values) %>% 
+  mutate(Box = case_when(Box == "Adriatico" ~ "Adriatic",
+                         Box == "Chipre" ~ "Cyprus",
+                         T ~ "Lyon"))
+```
+
+```{r stack all}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: true
+
+
+df_chla <- df_chla %>% 
+  dplyr::filter(Date >= min(df_HF$Date), 
+                Date <= max(df_HF$Date))
+
+df <- df_chla %>%
+  left_join(df_SST,  by = c("Box", "Date")) %>%
+  left_join(df_SSS,  by = c("Box", "Date")) %>%
+  left_join(df_PO4,  by = c("Box", "Date")) %>%
+  left_join(df_NO3,  by = c("Box", "Date")) %>%
+  left_join(df_NH4,  by = c("Box", "Date")) %>%
+  left_join(df_MLD,  by = c("Box", "Date")) %>%
+  left_join(df_HF,   by = c("Box", "Date")) %>% 
+  mutate(NPratio = (NO3+NH4)/PO4,
+         TotalNutrient = NO3+NH4+PO4) %>% 
+  pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
+  group_by(Metric, Box) %>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
+  ungroup()
+
+
+
+write.csv(df,"Data/df.all.csv", row.names = F)
+
+# df %>% 
+#   # dplyr::filter(Date >= date_min, 
+#                 # Date <= date_max) %>% 
+#   ggplot(aes(x = Date, y = Value, color = Box, group = Box))+
+#   geom_point()+
+#   geom_line()+
+#   # geom_smooth(method = "gam")+
+#   facet_wrap(~Metric,scales = "free")+
+#   theme_bw()
+
+df_wide <- df %>% 
+  pivot_wider(names_from = Metric,values_from = Value)
+
+# pairs(df_wide %>% dplyr::select(-Box))
+
+colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
+```
+
+```{r plot time series}
+#| echo: false
+#| warning: false
+#| fig-cap: "Times series of each environmental variables since 1999 at the three study sites."
+#| label: fig-TimeSeries_All
+#| out-width: "99%"
+#| fig-height: 10
+
+df %>% 
+  ggplot(aes(x = Date, y =  Value, color = Box))+
+  geom_line()+
+  facet_wrap(~Metric, scales = "free", ncol = 3)+
+  theme_minimal()+
+  scale_color_manual(values = colscale)
+
+```
+
+```{r plot Seasonality of variable}
+#| echo: false
+#| warning: false
+#| fig-cap: "Seasonality of each varibles"
+#| label: fig-DOY_All
+#| out-width: "99%"
+#| fig-height: 10
+
+
+df %>% 
+  dplyr::filter(Metric != "STD_Chla",
+                Metric != "SSS") %>% 
+  mutate(days = yday(Date)) %>% 
+  ggplot(aes(x = days, y =  Value, color = Box))+
+  geom_point(alpha = 0.2)+
+  geom_smooth(method = "gam") + 
+  facet_wrap( ~ Metric, scales = "free", ncol = 3)+
+  theme_minimal()+
+  scale_color_manual(values = colscale)
+
+```
+
