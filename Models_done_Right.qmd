@@ -1,5 +1,5 @@
 ---
-title: "Models_done_Right"
+title: "Results of GAMs"
 editor_options: 
   chunk_output_type: console
 ---
@@ -291,7 +291,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: true
+#| eval: false
 
 
 df_wide_all <- df_wide %>%
@@ -332,6 +332,12 @@ fit_all <- brm(
 ```
 
 ```{r new Data_Entire_Model}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 NewData_Adriatic<-expand_grid(SST=seq(min(df_wide_STD %>% 
                                         dplyr::filter(Box == "Adriatic") %>% 
@@ -409,20 +415,26 @@ mutate(.linpred=(.linpred * df_back_to_raw %>%
          .linpred=if_else(.linpred<0,0,.linpred))
 
 
-(p3_Prop<-NewData1_brms%>%
-  group_by(Box,N_P)%>%
-  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
-  # ungroup() %>% 
-  # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
-  ggplot(aes(x = N_P,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin),
-              alpha=0.2,
-              fill="darkcyan")+
-geom_line(colour="darkcyan")+
-  facet_wrap(~Box,scales = "free"))
+# (p3_Prop<-NewData1_brms%>%
+#   group_by(Box,N_P)%>%
+#   reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+#   # ungroup() %>% 
+#   # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+#   ggplot(aes(x = N_P,y=y)) +
+# geom_ribbon(aes(ymax = ymax,ymin=ymin),
+#               alpha=0.2,
+#               fill="darkcyan")+
+# geom_line(colour="darkcyan")+
+#   facet_wrap(~Box,scales = "free"))
 ```
 
 ```{r new Data_SST}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 NewData_Lyon_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
@@ -505,6 +517,12 @@ geom_line(colour="black",size = 1)+
 ```
 
 ```{r new Data_N_P}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 NewData_Lyon_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
@@ -586,6 +604,12 @@ geom_line(colour="black", size =1)+
 ```
 
 ```{r new sum_Nutri}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 NewData_Lyon_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
@@ -667,6 +691,12 @@ geom_line(colour="black" ,linewidth = 1)+
 ```
 
 ```{r combined plot}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 # Combine into a 3x3 layout
 combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P / conditional_Plot_sum_Nutri) + 
   plot_layout(nrow = 3, ncol = 1, guides = "collect") & 
@@ -681,11 +711,17 @@ ggsave("Outputs/plot_all_variable_per_Box.png", height = 10, width = 9.03, unit 
 ```
 
 ```{r new Sum_Nutri vs NP}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 library(terra)
 library(tidyterra)
 
-if(!fileexist("Outputs/interaction_Nutri_NP.csv")){
+if(!fileexist("Outputs/df_interaction_Nutri_NP.csv")){
   NewData_Lyon_sum_Nutri_NP<-expand_grid(N_P=seq(min(df_wide_STD %>% 
                                           dplyr::filter(Box == "Lyon") %>% 
                                           pull(N_P)),
@@ -749,7 +785,7 @@ if(!fileexist("Outputs/interaction_Nutri_NP.csv")){
                      dplyr::filter(metrics == "GeoMean_Chla") %>% 
                      pull(avg),
            .linpred=if_else(.linpred<0,0,.linpred))
-  write.csv(NewData_sum_Nutri_NP_brms , "Outputs/interaction_Nutri_NP.csv",row.names = F)
+  # write.csv(NewData_sum_Nutri_NP_brms , "Outputs/interaction_Nutri_NP.csv",row.names = F)
 
 
 
@@ -941,11 +977,17 @@ ggsave("Outputs/plot_Inter_NP_Nutri.png",plot_all_Inter, height = 10, width = 8,
 ```
 
 ```{r new SST vs NP}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
 
 library(terra)
 library(tidyterra)
 
-if(!fileexist("Outputs/interaction_SST_NP.csv")){
+if(!file.exists("Outputs/df_interaction_SST_NP.csv")){
   NewData_Lyon_SST_NP<-expand_grid(N_P=seq(min(df_wide_STD %>% 
                                           dplyr::filter(Box == "Lyon") %>% 
                                           pull(N_P)),
@@ -1029,7 +1071,7 @@ df_conditional_Plot_SST_NP <-NewData_SST_NP_brms%>%
              df_back_to_raw %>% 
              dplyr::filter(metrics == "N_P") %>% 
              pull(avg))  
-  write.csv(df , "Outputs/df_interaction_SST_NP.csv",row.names = F)
+  write.csv(df_conditional_Plot_SST_NP , "Outputs/df_interaction_SST_NP.csv",row.names = F)
   
   
   }else{
@@ -1199,3 +1241,132 @@ plot_all_Inter_SST_NP <- plot_Lyon_SST_NP + plot_Adriatic_SST_NP/ plot_Cyprus_SS
 
 ggsave("Outputs/plot_Inter_SST_NP.png",plot_all_Inter, height = 10, width = 8, dpi = 100)
 ```
+
+```{r 3D plot SST_NP}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: true
+
+library(plotly)
+
+if(!file.exists("Outputs/df_interaction_SST_NP.csv")){
+  NewData_Lyon_SST_NP<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Lyon") %>% 
+                                          pull(N_P)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Lyon") %>% 
+                                          pull(N_P)),length.out=200),
+                            SST=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Lyon") %>% 
+                                          pull(SST)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Lyon") %>% 
+                                          pull(SST)),length.out=200),
+                            sum_Nutri=median(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Lyon") %>% 
+                                          pull(sum_Nutri))) %>% 
+    mutate(Box = "Lyon")
+  
+  NewData_Adriatic_SST_NP<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Adriatic") %>% 
+                                          pull(N_P)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Adriatic") %>% 
+                                          pull(N_P)),length.out=200),
+                            SST=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Adriatic") %>% 
+                                          pull(SST)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Adriatic") %>% 
+                                          pull(SST)),length.out=200),
+                            sum_Nutri=median(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Adriatic") %>% 
+                                          pull(sum_Nutri)))  %>% 
+    mutate(Box = "Adriatic")
+  
+  NewData_Cyprus_SST_NP<-expand_grid(N_P=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Cyprus") %>% 
+                                          pull(N_P)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Cyprus") %>% 
+                                          pull(N_P)),length.out=200),
+                            SST=seq(min(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Cyprus") %>% 
+                                          pull(SST)),
+                                    max(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Cyprus") %>% 
+                                          pull(SST)),length.out=200),
+                            sum_Nutri=median(df_wide_STD %>% 
+                                          dplyr::filter(Box == "Cyprus") %>% 
+                                          pull(sum_Nutri)))   %>% 
+    mutate(Box = "Cyprus")
+  
+  NewData_SST_NP <- rbind(NewData_Cyprus_SST_NP,NewData_Lyon_SST_NP,NewData_Adriatic_SST_NP) %>% 
+    mutate(Box = as.factor(Box))
+  
+  NewData_SST_NP_brms<-NewData_SST_NP %>%
+  tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+  mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                     dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                     pull(sd))+
+           df_back_to_raw %>% 
+                     dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                     pull(avg),
+           .linpred=if_else(.linpred<0,0,.linpred))
+  # write.csv(NewData_sum_Nutri_NP_brms , "Outputs/interaction_SST_NP.csv",row.names = F)
+
+
+
+
+df_conditional_Plot_SST_NP <-NewData_SST_NP_brms%>%
+  group_by(Box,SST, N_P)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(SST = SST*df_back_to_raw %>% 
+             dplyr::filter(metrics == "SST") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "SST") %>% 
+             pull(avg),
+           N_P = N_P*df_back_to_raw %>% 
+             dplyr::filter(metrics == "N_P") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "N_P") %>% 
+             pull(avg))  
+  write.csv(df_conditional_Plot_SST_NP , "Outputs/df_interaction_SST_NP.csv",row.names = F)
+  
+  
+  }else{
+    df_conditional_Plot_SST_NP <- read.csv("Outputs/df_interaction_SST_NP.csv")
+  }
+
+
+df_rast_SST_NP_3D <- df_conditional_Plot_SST_NP %>% 
+  as_tibble() %>% 
+  rename(Chla = "y") %>% 
+  mutate(Error = (ymax-ymin))%>% 
+  dplyr::select(c(SST,N_P,Box,Chla,Error))
+
+df_splitted <- df_rast_SST_NP_3D %>%
+  split(.$Box)
+
+
+### Lyon
+    plot_ly(
+      data = df_splitted$Lyon,
+      x = ~SST,
+      y = ~N_P,
+      z = ~Chla,
+      color = ~Error,
+      colors = colorRamp(c("blue", "yellow", "red")),
+      type = "scatter3d",
+      mode = "markers",
+      marker = list(size = 3)
+    ) %>% layout(title = unique(df_splitted$Lyon$Box))
+
+# Arrange all plots in a grid (e.g., 2 rows)
+
+```
+
