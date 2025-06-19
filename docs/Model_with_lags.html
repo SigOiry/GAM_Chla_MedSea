@@ -141,33 +141,6 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Running "C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/bin/x64/Rcmd.exe" \
-  SHLIB foo.c
-using C compiler: 'gcc.exe (GCC) 14.2.0'
-gcc  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/include" -DNDEBUG   -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/Rcpp/include/"  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppEigen/include/"  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppEigen/include/unsupported"  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/BH/include" -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/StanHeaders/include/src/"  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/StanHeaders/include/"  -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppParallel/include/" -DRCPP_PARALLEL_USE_TBB=1 -I"C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/rstan/include" -DEIGEN_NO_DEBUG  -DBOOST_DISABLE_ASSERTS  -DBOOST_PENDING_INTEGER_LOG2_HPP  -DSTAN_THREADS  -DUSE_STANC3 -DSTRICT_R_HEADERS  -DBOOST_PHOENIX_NO_VARIADIC_EXPRESSION  -D_HAS_AUTO_PTR_ETC=0  -include "C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp"  -std=c++1y    -I"C:/rtools45/x86_64-w64-mingw32.static.posix/include"      -O2 -Wall -std=gnu2x  -mfpmath=sse -msse2 -mstackrealign   -c foo.c -o foo.o
-cc1.exe: warning: command-line option '-std=c++14' is valid for C++/ObjC++ but not for C
-In file included from C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppEigen/include/Eigen/Core:19,
-                 from C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppEigen/include/Eigen/Dense:1,
-                 from C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp:22,
-                 from &lt;command-line&gt;:
-C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/library/RcppEigen/include/Eigen/src/Core/util/Macros.h:679:10: fatal error: cmath: No such file or directory
-  679 | #include &lt;cmath&gt;
-      |          ^~~~~~~
-compilation terminated.
-make: *** [C:/Users/Simon/AppData/Local/Programs/R/R-4.5.0/etc/x64/Makeconf:289: foo.o] Error 1</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Model_with_lags_files/figure-html/combined plot-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
 <div style="text-align: center; margin-top: 20px;">
 <button onclick="window.open('https://github.com/SigOiry/GAM_Chla_MedSea/raw/refs/heads/main/output_lag.zip', '_blank');" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
 Download Data of this plot
