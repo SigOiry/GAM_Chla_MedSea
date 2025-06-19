@@ -302,7 +302,7 @@ colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 df_wide_all <- df_wide %>%
@@ -334,10 +334,10 @@ fit_all <- brm(
   data = df_wide_STD,
   family = student(),
   chains = 4, cores = 15,
-  iter = 1000,
-  warmup = 100,
+  iter = 10000,
+  warmup = 1000,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/A_Model_Unique_STD_all_1000_Student_SST_NP_Nutri_Lag"
+  file = "Data/Model/A_Model_Unique_STD_all_10000_Student_SST_NP_Nutri_Lag"
 )
 ```
 
@@ -346,7 +346,7 @@ fit_all <- brm(
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 NewData_Adriatic<-expand_grid(SST=seq(min(df_wide_STD %>% 
@@ -443,7 +443,7 @@ mutate(.linpred=(.linpred * df_back_to_raw %>%
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 NewData_Lyon_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
@@ -536,7 +536,7 @@ write.csv(conditional_Plot_SST_df, "Outputs/Conditional_plots/SST_lag.csv",row.n
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 NewData_Lyon_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
@@ -628,7 +628,7 @@ write.csv(conditional_Plot_N_P_df, "Outputs/Conditional_plots/NPratios_lag.csv",
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 NewData_Lyon_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
@@ -719,7 +719,7 @@ write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 # Combine into a 3x3 layout
 combined_plot_lag <- (conditional_Plot_SST_df_lag / conditional_Plot_N_P_df_lag / conditional_Plot_sum_Nutri_df_lag) + 
@@ -728,7 +728,7 @@ combined_plot_lag <- (conditional_Plot_SST_df_lag / conditional_Plot_N_P_df_lag 
   theme(legend.position = "top")# Makes each panel square
 
 # Show plot
-combined_plot_lag
+# combined_plot_lag
 
 
 ggsave("Outputs/plot_all_variable_per_Box_lag.png", height = 10, width = 9.03, unit = "in", dpi = 300)
@@ -739,7 +739,7 @@ ggsave("Outputs/plot_all_variable_per_Box_lag.png", height = 10, width = 9.03, u
 #| message: false
 #| warning: false
 #| cache: false
-#| eval: false
+#| eval: true
 
 
 # ---- settings ----
