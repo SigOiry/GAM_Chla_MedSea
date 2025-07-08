@@ -314,27 +314,8 @@ df %>%
 #| warning: false
 #| fig-cap: "Seasonality of each varibles"
 #| label: fig-DOY_All
-#| out-width: "99%"
-#| fig-height: 10
-library(ggridges)
-
-
-colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
-
-df %>% 
-  dplyr::filter(Metric %in% c("GeoMean_Chla","MLD","NPratio","SST","TotalNutrient")) %>% 
-  mutate(days = yday(Date)) %>% 
-  ggplot(aes(x = days, y =  Value, color = Box))+
-  geom_point(alpha = 0.2)+
-  geom_smooth(method = "gam") + 
-  facet_wrap( ~ Metric, scales = "free", ncol = 3)+
-  theme_minimal()+
-  scale_color_manual(values = colscale)
-
-
-
-```
-```{r}
+#| fig-width: 10
+#| fig-height: 8
 library(tidyverse)
 
 bin_size <- 10        # days per bin  (change to 30 for months, etc.)
@@ -363,7 +344,7 @@ df %>%
   geom_linerange(aes(ymin = p25, ymax = p75), linewidth = .8) +
 
      # keep your smooth
-  facet_wrap(~Metric , ncol = 1,scales = "free") +
+  facet_wrap(~Metric , ncol = 3,scales = "free") +
   scale_colour_manual(values = colscale) +
   scale_x_continuous(
     breaks = seq(0, 345, by = 60),
@@ -372,6 +353,9 @@ df %>%
   labs(x = NULL, y = NULL) +
   theme_Bede() +
   theme(legend.position = "bottom")
+
+
+
 ```
 
 
