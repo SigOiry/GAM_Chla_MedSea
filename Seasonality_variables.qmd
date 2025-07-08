@@ -283,8 +283,8 @@ df_wide <- df %>%
   pivot_wider(names_from = Metric,values_from = Value)
 
 # pairs(df_wide %>% dplyr::select(-Box))
+colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 
-colscale <- c("Adriatic" = "darkred","Lyon" = "darkgreen","Cyprus" = "#223F8D")
 ```
 
 ## Times series of variables
@@ -316,10 +316,13 @@ df %>%
 #| label: fig-DOY_All
 #| out-width: "99%"
 #| fig-height: 10
+library(ggridges)
+
+
+colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 
 df %>% 
-  dplyr::filter(Metric != "STD_Chla",
-                Metric != "SSS") %>% 
+  dplyr::filter(Metric %in% c("GeoMean_Chla","MLD","NPratio","SST","TotalNutrient")) %>% 
   mutate(days = yday(Date)) %>% 
   ggplot(aes(x = days, y =  Value, color = Box))+
   geom_point(alpha = 0.2)+
@@ -328,7 +331,50 @@ df %>%
   theme_minimal()+
   scale_color_manual(values = colscale)
 
+
+
 ```
+```{r}
+library(tidyverse)
+
+bin_size <- 10        # days per bin  (change to 30 for months, etc.)
+
+df %>% 
+  filter(Metric %in% c("GeoMean_Chla","MLD","NPratio","SST","TotalNutrient")) %>% 
+  mutate(
+    day      = yday(Date),
+    bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,
+    Metric = case_when(Metric == "GeoMean_Chla" ~ "Chlorophyll-a",
+                       Metric == "MLD" ~ "Mixed Layer Depth",
+                       Metric == "NPratio" ~ "NO3:PO4",
+                       Metric == "TotalNutrient" ~ "Total Nutrient",
+                       T ~ Metric)# mid-point
+  ) %>% 
+  group_by(Metric, Box, day) %>% 
+  summarise(
+    mn = mean(Value, na.rm = TRUE),
+    p25= quantile(Value, .25, na.rm = TRUE),
+    p75= quantile(Value, .75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  ggplot(aes(day, mn, colour = Box)) +
+  geom_smooth(method = "gam") +
+  geom_point(size = 1.4) +  
+  geom_linerange(aes(ymin = p25, ymax = p75), linewidth = .8) +
+
+     # keep your smooth
+  facet_wrap(~Metric , ncol = 1,scales = "free") +
+  scale_colour_manual(values = colscale) +
+  scale_x_continuous(
+    breaks = seq(0, 345, by = 60),
+    labels = month.abb[c(1,3,5,7,9,11)]
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_Bede() +
+  theme(legend.position = "bottom")
+```
+
+
 
 ## Trends of SST
 

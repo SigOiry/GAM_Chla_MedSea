@@ -285,6 +285,8 @@ df_wide <- df %>%
 # pairs(df_wide %>% dplyr::select(-Box))
 
 colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
+colscale_rib <- c("Adriatic" = "#CCCCCC","Lyon" = "#CCCCCC","Cyprus" = "#CCCCCC")
+
 ```
 
 ```{r DF_model}
@@ -503,17 +505,17 @@ conditional_Plot_SST_df<-NewData_SST_brms%>%
              dplyr::filter(metrics == "SST") %>% 
              pull(avg))
 
-conditional_Plot_SST_df%>% 
+conditional_Plot_SST <- conditional_Plot_SST_df%>% 
   # ungroup() %>% 
   # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = SST,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin,
-              fill=Box),
-              alpha=0.4)+
-geom_line(colour="black",size = 1)+
-        scale_fill_manual(values = colscale)+
+geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
+geom_line(aes(color = Box),size = 1)+
+        scale_color_manual(values = colscale)+
+        scale_fill_manual(values = colscale_rib)+
 
-  facet_wrap(~Box)+
+
+  facet_wrap(~Box, scales = "free_x")+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("SST (°C)")+
   theme_bw()
@@ -596,18 +598,17 @@ conditional_Plot_N_P_df<-NewData_N_P_brms%>%
              dplyr::filter(metrics == "N_P") %>% 
              pull(avg)) 
 
-conditional_Plot_N_P_df %>% 
+conditional_Plot_N_P <- conditional_Plot_N_P_df %>% 
   # ungroup() %>% 
   # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = N_P,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin,
-              fill=Box),
-              alpha=0.4)+
-geom_line(colour="black", size =1)+
-  facet_wrap(~Box)+
-    scale_fill_manual(values = colscale)+
+geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
+geom_line(aes(colour=Box), size =1)+
+  facet_wrap(~Box, scales = "free_x")+
+    scale_colour_manual(values = colscale)+
+        scale_fill_manual(values = colscale_rib)+
     ylab("Chla Concentration (mg.m⁻³)")+
-    xlab("Nitrogen/Phosphorus")+
+    xlab("NO3:PO4")+
   theme_bw()
 
 write.csv(conditional_Plot_N_P_df, "Outputs/Conditional_plots/NPratios.csv",row.names = F)
@@ -688,18 +689,17 @@ conditional_Plot_sum_Nutri_df<-NewData_sum_Nutri_brms%>%
              dplyr::filter(metrics == "sum_Nutri") %>% 
              pull(avg)) 
 
-conditional_Plot_sum_Nutri_df %>% 
+conditional_Plot_sum_Nutri <- conditional_Plot_sum_Nutri_df %>% 
   # ungroup() %>% 
   # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = sum_Nutri,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin,
-              fill=Box),
-              alpha=0.4)+
-geom_line(colour="black" ,linewidth = 1)+
-  facet_wrap(~Box)+
+geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
+geom_line(aes(colour=Box) ,linewidth = 1)+
+  facet_wrap(~Box, scales = "free_x")+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("Sum of Nutrient (mmol.m⁻³)")+
-  scale_fill_manual(values = colscale)+
+  scale_colour_manual(values = colscale)+
+  scale_fill_manual(values = colscale_rib)+
   theme_bw()
 
 write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad.csv",row.names = F)
@@ -713,8 +713,8 @@ write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad
 #| eval: false
 
 # Combine into a 3x3 layout
-combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P / conditional_Plot_sum_Nutri) + 
-  plot_layout(nrow = 3, ncol = 1, guides = "collect") & 
+combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P) + 
+  plot_layout(nrow = 2, ncol = 1, guides = "collect") & 
   theme(aspect.ratio = 1) &
   theme(legend.position = "top")# Makes each panel square
 
@@ -722,7 +722,7 @@ combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P / conditional_Plot
 combined_plot
 
 
-ggsave("Outputs/plot_all_variable_per_Box.png", height = 10, width = 9.03, unit = "in", dpi = 300)
+ggsave("Outputs/plot_all_variable_per_Box.png", height = 10, width = 6.03, unit = "in", dpi = 300)
 ```
 
 ```{r zip outputs}
@@ -756,7 +756,7 @@ Download Data of this plot
 ```{r Figs All_Variables_Boxes}
 #| echo: false
 #| warning: false
-#| fig-cap: "Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (middle) nitrogen∕phosphorus ratio (N∕P), and (bottom) total inorganic nutrient load (mmol m⁻³); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Black lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other two variables at their mean values."
+#| fig-cap: "Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (bottom) nitrogen∕phosphorus ratio (N∕P); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other variable to its mean value."
 #| label: fig-Fig_All_Boxes
 #| out-width: "99%"
 

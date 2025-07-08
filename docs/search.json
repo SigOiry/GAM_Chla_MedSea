@@ -11,14 +11,14 @@
     "href": "Models_done_Right.html",
     "title": "Results of GAMs",
     "section": "",
-    "text": "Download Data of this plot\n\n\n\n\n\n\n\n\n\n\nFigure 1: Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (middle) nitrogen∕phosphorus ratio (N∕P), and (bottom) total inorganic nutrient load (mmol m⁻³); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Black lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other two variables at their mean values."
+    "text": "Download Data of this plot\n\n\n\n\n\n\n\n\n\n\nFigure 1: Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (bottom) nitrogen∕phosphorus ratio (N∕P); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other variable to its mean value."
   },
   {
     "objectID": "Models_done_Right.html#conditional-effect-of-each-variable-of-the-chlorophyll",
     "href": "Models_done_Right.html#conditional-effect-of-each-variable-of-the-chlorophyll",
     "title": "Results of GAMs",
     "section": "",
-    "text": "Download Data of this plot\n\n\n\n\n\n\n\n\n\n\nFigure 1: Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (middle) nitrogen∕phosphorus ratio (N∕P), and (bottom) total inorganic nutrient load (mmol m⁻³); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Black lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other two variables at their mean values."
+    "text": "Download Data of this plot\n\n\n\n\n\n\n\n\n\n\nFigure 1: Smooth relationships between chlorophyll-a concentration (mg m⁻³) and key environmental drivers in three study areas. Panels are arranged by predictor variable (rows) and location (columns): (top) sea surface temperature (SST, °C), (bottom) nitrogen∕phosphorus ratio (N∕P); (left) northern Adriatic Sea, (center) Cyprus coastal waters, and (right) Gulf of Lyon. Lines represent GAM‐estimated smoothers and shaded bands denote 95% confidence intervals. Conditional effects of each predictor were obtained by holding the other variable to its mean value."
   },
   {
     "objectID": "Models_done_Right.html#interactions-between-variables",
@@ -53,7 +53,7 @@
     "href": "Seasonality_variables.html#seasonality-of-variables",
     "title": "Temporality of variables",
     "section": "Seasonality of Variables",
-    "text": "Seasonality of Variables\n\n\n\n\n\n\n\n\nFigure 2: Seasonality of each varibles"
+    "text": "Seasonality of Variables\n\n\n\n\n\n\n\n\nFigure 2: Seasonality of each varibles\n\n\n\n\n\n\nlibrary(tidyverse)\n\nbin_size &lt;- 10        # days per bin  (change to 30 for months, etc.)\n\ndf %&gt;% \n  filter(Metric %in% c(\"GeoMean_Chla\",\"MLD\",\"NPratio\",\"SST\",\"TotalNutrient\")) %&gt;% \n  mutate(\n    day      = yday(Date),\n    bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,\n    Metric = case_when(Metric == \"GeoMean_Chla\" ~ \"Chlorophyll-a\",\n                       Metric == \"MLD\" ~ \"Mixed Layer Depth\",\n                       Metric == \"NPratio\" ~ \"NO3:PO4\",\n                       Metric == \"TotalNutrient\" ~ \"Total Nutrient\",\n                       T ~ Metric)# mid-point\n  ) %&gt;% \n  group_by(Metric, Box, day) %&gt;% \n  summarise(\n    mn = mean(Value, na.rm = TRUE),\n    p25= quantile(Value, .25, na.rm = TRUE),\n    p75= quantile(Value, .75, na.rm = TRUE),\n    .groups = \"drop\"\n  ) %&gt;% \n  ggplot(aes(day, mn, colour = Box)) +\n  geom_smooth(method = \"gam\") +\n  geom_point(size = 1.4) +  \n  geom_linerange(aes(ymin = p25, ymax = p75), linewidth = .8) +\n\n     # keep your smooth\n  facet_wrap(~Metric , ncol = 1,scales = \"free\") +\n  scale_colour_manual(values = colscale) +\n  scale_x_continuous(\n    breaks = seq(0, 345, by = 60),\n    labels = month.abb[c(1,3,5,7,9,11)]\n  ) +\n  labs(x = NULL, y = NULL) +\n  theme_Bede() +\n  theme(legend.position = \"bottom\")\n\n`geom_smooth()` using formula = 'y ~ s(x, bs = \"cs\")'"
   },
   {
     "objectID": "Seasonality_variables.html#trends-of-sst",
