@@ -311,16 +311,15 @@ df %>%
 ## Seasonality of Variables
 ```{r plot Seasonality of variable}
 #| echo: false
+#| message: false
 #| warning: false
-#| fig-cap: "Seasonality of each varibles"
-#| label: fig-DOY_All
-#| fig-width: 10
-#| fig-height: 8
-library(tidyverse)
+#| cache: false
+#| eval: false
+
 
 bin_size <- 10        # days per bin  (change to 30 for months, etc.)
 
-df %>% 
+plot_seas <- df %>% 
   filter(Metric %in% c("GeoMean_Chla","MLD","NPratio","SST","TotalNutrient")) %>% 
   mutate(
     day      = yday(Date),
@@ -354,7 +353,18 @@ df %>%
   theme_Bede() +
   theme(legend.position = "bottom")
 
+ggsave("Outputs/Seasonality_variables.png", dpi = 300)
 
+```
+
+```{r plot Seasonality of variable2}
+#| echo: false
+#| warning: false
+#| fig-cap: "Seasonality of each varibles"
+#| label: fig-DOY_All
+#| out-width: "100%"
+
+knitr::include_graphics("Outputs/Seasonality_variables.png")
 
 ```
 
