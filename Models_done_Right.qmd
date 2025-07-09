@@ -722,7 +722,7 @@ combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P) +
 combined_plot
 
 
-ggsave("Outputs/plot_all_variable_per_Box.png", height = 10, width = 6.03, unit = "in", dpi = 300)
+ggsave("Outputs/plot_all_variable_per_Box.png", height = 7.5, width = 10, unit = "in", dpi = 300)
 ```
 
 ```{r zip outputs}
