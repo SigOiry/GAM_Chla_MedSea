@@ -17,10 +17,10 @@ library(dplyr)
 library(Utilities.Package)
 ```
 
+
 ```{r Open Chlorophyll}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 # Read in
@@ -37,13 +37,13 @@ df_chla <- read.csv("Data/Variables_values/Monthly_Chl_boxes.csv", stringsAsFact
                          Box == "Chipre" ~ "Cyprus",
                          T ~ "Lyon"))
 
+# df_chla
 
 ```
 
 ```{r Open HF}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 df_HF_Adriatic <- read.csv("Data/Variables_values/Monthly_HF_Adriatic.csv", stringsAsFactors = FALSE) %>% 
@@ -73,7 +73,6 @@ rm(df_HF_Chipre)
 ```{r Open MLD}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", stringsAsFactors = FALSE) %>% 
@@ -84,7 +83,7 @@ df_MLD_Adriatic <- read.csv("Data/Variables_values/Monthly_MLD_Adriatic.csv", st
 df_MLD_Lyon <- read.csv("Data/Variables_values/Monthly_MLD_Lyon.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
-  mutate(Box = "Lyon")%>% 
+  mutate(Box = "Lyon") %>% 
   rename(MLD="MLD_mean")
 
 df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", stringsAsFactors = FALSE) %>% 
@@ -92,7 +91,7 @@ df_MLD_Chipre <- read.csv("Data/Variables_values/Monthly_MLD_Cyprus.csv", string
   as_tibble() %>% 
   mutate(Box = "Cyprus")
 
-df_MLD <- rbind(df_MLD_Lyon,df_MLD_Adriatic,df_MLD_Chipre)
+df_MLD <- rbind(df_MLD_Adriatic,df_MLD_Lyon,df_MLD_Chipre)
 
 rm(df_MLD_Adriatic)
 rm(df_MLD_Lyon)
@@ -103,26 +102,25 @@ rm(df_MLD_Chipre)
 ```{r Open NH4}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 
-df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Lyon")
 
-df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
 
-df_NH4 <- rbind(df_NH4_Lyon,df_NH4_Adriatic,df_NH4_Chipre)
+df_NH4 <- rbind(df_NH4_Adriatic,df_NH4_Lyon,df_NH4_Chipre)
 
 rm(df_NH4_Adriatic)
 rm(df_NH4_Lyon)
@@ -133,29 +131,28 @@ rm(df_NH4_Chipre)
 ```{r Open NO3}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 
-df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
-  mutate(Date = dmy(Date)) %>% 
-  as_tibble() %>% 
-  mutate(Box = "Lyon")
-
-df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
 
 df_NO3 <- rbind(df_NO3_Adriatic,df_NO3_Lyon,df_NO3_Chipre)
 
-rm(df_NO3_Lyon)
 rm(df_NO3_Adriatic)
+rm(df_NO3_Lyon)
 rm(df_NO3_Chipre)
 
 ```
@@ -163,28 +160,27 @@ rm(df_NO3_Chipre)
 ```{r Open PO4}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
-df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
-  mutate(Date = dmy(Date)) %>% 
-  as_tibble() %>% 
-  mutate(Box = "Lyon")
-
-df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
 
-df_PO4 <- rbind(df_PO4_Lyon,df_PO4_Adriatic,df_PO4_Chipre)
+df_PO4 <- rbind(df_PO4_Adriatic,df_PO4_Lyon,df_PO4_Chipre)
 
-rm(df_PO4_Lyon)
 rm(df_PO4_Adriatic)
+rm(df_PO4_Lyon)
 rm(df_PO4_Chipre)
 
 ```
@@ -192,28 +188,27 @@ rm(df_PO4_Chipre)
 ```{r Open SSS}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
-
-df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
-  mutate(Date = dmy(Date)) %>% 
-  as_tibble() %>% 
-  mutate(Box = "Lyon")
 
 df_SSS_Adriatic <- read.csv("Data/Variables_values/Monthly_SSS_Adriatic.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
+df_SSS_Lyon <- read.csv("Data/Variables_values/Monthly_SSS_Lyon.csv", stringsAsFactors = FALSE) %>% 
+  mutate(Date = dmy(Date)) %>% 
+  as_tibble() %>% 
+  mutate(Box = "Lyon")
+
 df_SSS_Chipre <- read.csv("Data/Variables_values/Monthly_SSS_Cyprus.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
 
-df_SSS <- rbind(df_SSS_Lyon,df_SSS_Adriatic,df_SSS_Chipre)
+df_SSS <- rbind(df_SSS_Adriatic,df_SSS_Lyon,df_SSS_Chipre)
 
-rm(df_SSS_Lyon)
 rm(df_SSS_Adriatic)
+rm(df_SSS_Lyon)
 rm(df_SSS_Chipre)
 
 ```
@@ -221,7 +216,6 @@ rm(df_SSS_Chipre)
 ```{r Open SST}
 #| cache: false
 #| echo: false
-#| eval: true
 #| warning: false
 
 df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFactors = FALSE) %>% 
@@ -238,12 +232,12 @@ df_SST <- read.csv("Data/Variables_values/Monthly_SST_boxes.csv", stringsAsFacto
 ```
 
 ```{r stack all}
-#| echo: false
-#| message: false
-#| warning: false
 #| cache: false
-#| eval: true
+#| echo: false
+#| warning: false
 
+date_min <- dmy("01-01-2018")
+date_max <- dmy("01-01-2021")
 
 df_chla <- df_chla %>% 
   dplyr::filter(Date >= min(df_HF$Date), 
@@ -258,13 +252,11 @@ df <- df_chla %>%
   left_join(df_MLD,  by = c("Box", "Date")) %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
   mutate(NPratio = (NO3+NH4)/PO4,
-         TotalNutrient = NO3+NH4+PO4,
-         Box = as.factor(Box)) %>% 
+         TotalNutrient = NO3+NH4+PO4) %>% 
   pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
   group_by(Metric, Box) %>% 
-  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99))))%>% 
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99)))) %>% 
   ungroup()
-
 
 
 write.csv(df,"Data/df.all.csv", row.names = F)
@@ -283,7 +275,7 @@ df_wide <- df %>%
   pivot_wider(names_from = Metric,values_from = Value)
 
 # pairs(df_wide %>% dplyr::select(-Box))
-colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
+
 
 ```
 
@@ -316,14 +308,15 @@ df %>%
 #| cache: false
 #| eval: false
 
+colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 
-bin_size <- 10        # days per bin  (change to 30 for months, etc.)
+# bin_size <- 10        # days per bin  (change to 30 for months, etc.)
 
 plot_seas <- df %>% 
   filter(Metric %in% c("GeoMean_Chla","MLD","NPratio","SST","TotalNutrient")) %>% 
   mutate(
     day      = yday(Date),
-    bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,
+    # bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,
     Metric = case_when(Metric == "GeoMean_Chla" ~ "Chlorophyll-a",
                        Metric == "MLD" ~ "Mixed Layer Depth",
                        Metric == "NPratio" ~ "NO3:PO4",

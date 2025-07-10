@@ -116,17 +116,17 @@ rm(df_MLD_Chipre)
 #| warning: false
 
 
-df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Adriatic <- read.csv("Data/Variables_values/Monthly_NH4_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Lyon <- read.csv("Data/Variables_values/Monthly_NH4_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Lyon")
 
-df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NH4_Chipre <- read.csv("Data/Variables_values/Monthly_NH4_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
@@ -145,17 +145,17 @@ rm(df_NH4_Chipre)
 #| warning: false
 
 
-df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NO3_Adriatic <- read.csv("Data/Variables_values/Monthly_NO3_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NO3_Lyon <- read.csv("Data/Variables_values/Monthly_NO3_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Lyon")
 
-df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_NO3_Chipre <- read.csv("Data/Variables_values/Monthly_NO3_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
@@ -173,17 +173,17 @@ rm(df_NO3_Chipre)
 #| echo: false
 #| warning: false
 
-df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_PO4_Adriatic <- read.csv("Data/Variables_values/Monthly_PO4_Adriatic_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Adriatic")
 
-df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_PO4_Lyon <- read.csv("Data/Variables_values/Monthly_PO4_Lyon_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Lyon")
 
-df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_for_MLD.csv", stringsAsFactors = FALSE) %>% 
+df_PO4_Chipre <- read.csv("Data/Variables_values/Monthly_PO4_Cyprus_average_MLD_thresholdMLD.csv", stringsAsFactors = FALSE) %>% 
   mutate(Date = dmy(Date)) %>% 
   as_tibble() %>% 
   mutate(Box = "Cyprus")
@@ -452,8 +452,8 @@ m %>%
 
 
 library(plotly)
-
-colscale <- c("Adriatic" = "goldenrod","Lyon" = "darkgreen","Cyprus" = "darkred")
+# color_pal <- c("#4F8EB1","#223F8D","#F6F9A0")
+colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#8d8f53","Cyprus" = "#223F8D")
 p <- df %>%
   # dplyr::filter(Date >= date_min,
                 # Date <= date_max) %>%
