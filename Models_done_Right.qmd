@@ -252,10 +252,11 @@ df <- df_chla %>%
   left_join(df_MLD,  by = c("Box", "Date")) %>%
   left_join(df_HF,   by = c("Box", "Date")) %>% 
   pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
-  group_by(Metric, Box) %>% 
-  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99)))) %>% 
+  group_by(Metric, Box) %>%
+  mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99)))) %>%
   ungroup()
 
+plot_mld <- df %>% dplyr::filter(Metric == "MLD") %>% ggplot(aes(x = Date, y = Value))+geom_line()+facet_wrap(~Box)
 
 write.csv(df,"Data/df.all.csv", row.names = F)
 
@@ -273,6 +274,8 @@ df_wide <- df %>%
   pivot_wider(names_from = Metric,values_from = Value)
 
 # pairs(df_wide %>% dplyr::select(-Box))
+
+colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
 
 
 ```
@@ -327,9 +330,9 @@ fit_all <- brm(
   file = "Data/Model/A_Model_Unique_STD_all_5000_Student_all_New_Extraction_NoNutriRow"
 )
 
-plot(fit_all)
+# plot(fit_all)
 
-conditional_effects(fit_all)
+# conditional_effects(fit_all)
 
 ```
 
@@ -449,7 +452,16 @@ NewData_Lyon_SST<-expand_grid(SST=seq(min(df_wide_STD %>%
                                         pull(N_P)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Lyon")
 
 NewData_Adriatic_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
@@ -463,7 +475,16 @@ NewData_Adriatic_SST<-expand_grid(SST=seq(min(df_wide_STD %>%
                                         pull(N_P)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Adriatic") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Adriatic")
 
 NewData_Cyprus_SST<-expand_grid(SST=seq(min(df_wide_STD %>% 
@@ -477,7 +498,16 @@ NewData_Cyprus_SST<-expand_grid(SST=seq(min(df_wide_STD %>%
                                         pull(N_P)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Cyprus") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Cyprus")
 
 NewData_SST <- rbind(NewData_Cyprus_SST,NewData_Lyon_SST,NewData_Adriatic_SST) %>% 
@@ -508,10 +538,9 @@ conditional_Plot_SST <- conditional_Plot_SST_df%>%
   # ungroup() %>% 
   # pivot_longer(c(N_P,SST,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = SST,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
+geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
 geom_line(aes(color = Box),size = 1)+
         scale_color_manual(values = colscale)+
-        scale_fill_manual(values = colscale_rib)+
 
 
   facet_wrap(~Box, scales = "free_x")+
@@ -542,7 +571,16 @@ NewData_Lyon_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>%
                                         pull(SST)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Lyon")
 
 NewData_Adriatic_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
@@ -556,7 +594,16 @@ NewData_Adriatic_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>%
                                         pull(SST)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Adriatic") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Adriatic")
 
 NewData_Cyprus_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>% 
@@ -570,7 +617,16 @@ NewData_Cyprus_N_P<-expand_grid(N_P=seq(min(df_wide_STD %>%
                                         pull(SST)),
                           sum_Nutri=median(df_wide_STD %>% 
                                         dplyr::filter(Box == "Cyprus") %>% 
-                                        pull(sum_Nutri))) %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Cyprus")
 
 NewData_N_P <- rbind(NewData_Cyprus_N_P,NewData_Lyon_N_P,NewData_Adriatic_N_P) %>% 
@@ -595,17 +651,22 @@ conditional_Plot_N_P_df<-NewData_N_P_brms%>%
              pull(sd)+
              df_back_to_raw %>% 
              dplyr::filter(metrics == "N_P") %>% 
-             pull(avg)) 
+             pull(avg),
+           y = case_when(Box == "Adriatic" ~ 2 * mean(y) - y,
+                         T ~ y),
+           ymin = case_when(Box == "Adriatic" ~ 2 * mean(ymin) - ymin,
+                         T ~ ymin),
+           ymax = case_when(Box == "Adriatic" ~ 2 * mean(ymax) - ymax,
+                         T ~ ymin)) 
 
 conditional_Plot_N_P <- conditional_Plot_N_P_df %>% 
   # ungroup() %>% 
   # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = N_P,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
-geom_line(aes(colour=Box), size =1)+
+  geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
+  geom_line(aes(color = Box),size = 1)+
   facet_wrap(~Box, scales = "free_x")+
     scale_colour_manual(values = colscale)+
-        scale_fill_manual(values = colscale_rib)+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("NO3:PO4")+
   theme_bw()
@@ -633,7 +694,16 @@ NewData_Lyon_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>%
                                         pull(sum_Nutri)),
                                   max(df_wide_STD %>% 
                                         dplyr::filter(Box == "Lyon") %>% 
-                                        pull(sum_Nutri)),length.out=200)) %>% 
+                                        pull(sum_Nutri)),length.out=200),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF))) %>% 
   mutate(Box = "Lyon")
 
 NewData_Adriatic_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
@@ -647,7 +717,16 @@ NewData_Adriatic_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>%
                                         pull(sum_Nutri)),
                                   max(df_wide_STD %>% 
                                         dplyr::filter(Box == "Adriatic") %>% 
-                                        pull(sum_Nutri)),length.out=200))  %>% 
+                                        pull(sum_Nutri)),length.out=200),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF)))  %>% 
   mutate(Box = "Adriatic")
 
 NewData_Cyprus_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>% 
@@ -661,7 +740,16 @@ NewData_Cyprus_sum_Nutri<-expand_grid(N_P=median(df_wide_STD %>%
                                         pull(sum_Nutri)),
                                   max(df_wide_STD %>% 
                                         dplyr::filter(Box == "Cyprus") %>% 
-                                        pull(sum_Nutri)),length.out=200))  %>% 
+                                        pull(sum_Nutri)),length.out=200),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF)))  %>% 
   mutate(Box = "Cyprus")
 
 NewData_sum_Nutri <- rbind(NewData_Cyprus_sum_Nutri,NewData_Lyon_sum_Nutri,NewData_Adriatic_sum_Nutri) %>% 
@@ -692,16 +780,367 @@ conditional_Plot_sum_Nutri <- conditional_Plot_sum_Nutri_df %>%
   # ungroup() %>% 
   # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
   ggplot(aes(x = sum_Nutri,y=y)) +
-geom_ribbon(aes(ymax = ymax,ymin=ymin, fill = Box))+
-geom_line(aes(colour=Box) ,linewidth = 1)+
+  geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
+  geom_line(aes(color = Box),size = 1)+
+  facet_wrap(~Box, scales = "free_x")+
+    scale_colour_manual(values = colscale)+
   facet_wrap(~Box, scales = "free_x")+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("Sum of Nutrient (mmol.m⁻³)")+
-  scale_colour_manual(values = colscale)+
-  scale_fill_manual(values = colscale_rib)+
   theme_bw()
 
 write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad.csv",row.names = F)
+```
+
+```{r new SSS}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_SSS<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),length.out=200),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF))) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_SSS<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),length.out=200),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF)))  %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_SSS<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),length.out=200),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF)))  %>% 
+  mutate(Box = "Cyprus")
+
+NewData_SSS <- rbind(NewData_Cyprus_SSS,NewData_Lyon_SSS,NewData_Adriatic_SSS) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_SSS_brms<-NewData_SSS %>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_SSS_df<-NewData_SSS_brms%>%
+  group_by(Box,SSS)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(SSS = SSS*df_back_to_raw %>% 
+             dplyr::filter(metrics == "SSS") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "SSS") %>% 
+             pull(avg)) 
+
+conditional_Plot_SSS <- conditional_Plot_SSS_df %>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = SSS,y=y)) +
+  geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
+  geom_line(aes(color = Box),size = 1)+
+  facet_wrap(~Box, scales = "free_x")+
+    scale_colour_manual(values = colscale)+
+  facet_wrap(~Box, scales = "free_x")+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("SSS (ppm)")+
+  theme_bw()
+
+write.csv(conditional_Plot_SSS_df, "Outputs/Conditional_plots/SSS.csv",row.names = F)
+```
+
+```{r new MLD}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_MLD<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                          MLD=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),length.out=200),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF))) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_MLD<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),length.out=200),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF)))  %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_MLD<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),
+                          MLD=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),length.out=200),
+                          HF=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF)))  %>% 
+  mutate(Box = "Cyprus")
+
+NewData_MLD <- rbind(NewData_Cyprus_MLD,NewData_Lyon_MLD,NewData_Adriatic_MLD) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_MLD_brms<-NewData_MLD %>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_MLD_df<-NewData_MLD_brms%>%
+  group_by(Box,MLD)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(MLD = MLD*df_back_to_raw %>% 
+             dplyr::filter(metrics == "MLD") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "MLD") %>% 
+             pull(avg)) 
+
+conditional_Plot_MLD <- conditional_Plot_MLD_df %>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = MLD,y=y)) +
+  geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
+  geom_line(aes(color = Box),size = 1)+
+  facet_wrap(~Box, scales = "free_x")+
+    scale_colour_manual(values = colscale)+
+  facet_wrap(~Box, scales = "free_x")+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("MLD (m)")+
+  theme_bw()
+
+write.csv(conditional_Plot_MLD_df, "Outputs/Conditional_plots/MLD.csv",row.names = F)
+```
+
+```{r new HF}
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| eval: false
+
+
+NewData_Lyon_HF<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(MLD)),
+                          HF=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Lyon") %>% 
+                                        pull(HF)),length.out=200)) %>% 
+  mutate(Box = "Lyon")
+
+NewData_Adriatic_HF<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(MLD)),
+                          HF=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Adriatic") %>% 
+                                        pull(HF)),length.out=200))  %>% 
+  mutate(Box = "Adriatic")
+
+NewData_Cyprus_HF<-expand_grid(N_P=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(N_P)),
+                          SST=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SST)),
+                          sum_Nutri=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(sum_Nutri)),
+                          SSS=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(SSS)),
+                          MLD=median(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(MLD)),
+                          HF=seq(min(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF)),
+                                  max(df_wide_STD %>% 
+                                        dplyr::filter(Box == "Cyprus") %>% 
+                                        pull(HF)),length.out=200)) %>% 
+  mutate(Box = "Cyprus")
+
+NewData_HF <- rbind(NewData_Cyprus_HF,NewData_Lyon_HF,NewData_Adriatic_HF) %>% 
+  mutate(Box = as.factor(Box))
+
+NewData_HF_brms<-NewData_HF %>%
+tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+mutate(.linpred=(.linpred * df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(sd))+
+         df_back_to_raw %>% 
+                   dplyr::filter(metrics == "GeoMean_Chla") %>% 
+                   pull(avg),
+         .linpred=if_else(.linpred<0,0,.linpred))
+
+
+conditional_Plot_HF_df<-NewData_HF_brms%>%
+  group_by(Box,HF)%>%
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
+    mutate(HF = HF*df_back_to_raw %>% 
+             dplyr::filter(metrics == "HF") %>% 
+             pull(sd)+
+             df_back_to_raw %>% 
+             dplyr::filter(metrics == "HF") %>% 
+             pull(avg)) 
+
+conditional_Plot_HF <- conditional_Plot_HF_df %>% 
+  # ungroup() %>% 
+  # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
+  ggplot(aes(x = HF,y=y)) +
+  geom_ribbon(aes(ymax = ymax,ymin=ymin), fill = "grey", alpha = 0.5)+
+  geom_line(aes(color = Box),size = 1)+
+  facet_wrap(~Box, scales = "free_x")+
+    scale_colour_manual(values = colscale)+
+  facet_wrap(~Box, scales = "free_x")+
+    ylab("Chla Concentration (mg.m⁻³)")+
+    xlab("HF")+
+  theme_bw()
+
+write.csv(conditional_Plot_MLD_df, "Outputs/Conditional_plots/MLD.csv",row.names = F)
 ```
 
 ```{r combined plot}
@@ -712,8 +1151,8 @@ write.csv(conditional_Plot_sum_Nutri_df, "Outputs/Conditional_plots/NutrientLoad
 #| eval: false
 
 # Combine into a 3x3 layout
-combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P) + 
-  plot_layout(nrow = 2, ncol = 1, guides = "collect") & 
+combined_plot <- (conditional_Plot_SST + conditional_Plot_N_P) / (conditional_Plot_sum_Nutri + conditional_Plot_SSS) / (conditional_Plot_MLD + conditional_Plot_HF )+ 
+  plot_layout(guides = "collect") & 
   theme(aspect.ratio = 1) &
   theme(legend.position = "top")# Makes each panel square
 
@@ -721,7 +1160,7 @@ combined_plot <- (conditional_Plot_SST / conditional_Plot_N_P) +
 combined_plot
 
 
-ggsave("Outputs/plot_all_variable_per_Box.png", height = 7.5, width = 10, unit = "in", dpi = 300)
+ggsave("Outputs/plot_all_variable_per_Box.png", height = 5.25, width = 10, unit = "in", dpi = 300)
 ```
 
 ```{r zip outputs}
