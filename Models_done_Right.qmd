@@ -298,7 +298,7 @@ df_wide_all <- df_wide %>%
 
 df_wide_STD <- df_wide_all %>%
   # group_by(Box) %>%
-  mutate(across(c(GeoMean_Chla ,SST, N_P, sum_Nutri),
+  mutate(across(c(GeoMean_Chla ,SST, SSS,PO4,NO3,NH4,MLD,HF,N_P, sum_Nutri),
                 ~ ( .x - mean(.x, na.rm = TRUE) ) / sd(.x, na.rm = TRUE )))
 
 df_back_to_raw <- df_wide_all %>% 
@@ -312,20 +312,24 @@ fit_all <- brm(
     s(SST, by = Box) + 
     s(N_P, by = Box) +
     s(SSS, by = Box) +
-    s(PO4, by = Box) +
-    s(NO3, by = Box) +
-    s(NH4, by = Box) +
+    # s(PO4, by = Box) +
+    # s(NO3, by = Box) +
+    # s(NH4, by = Box) +
     s(MLD, by = Box) +
     s(HF, by = Box) +
     s(sum_Nutri, by = Box),
   data = df_wide_STD,
   family = student(),
   chains = 4, cores = 15,
-  iter = 1000,
-  warmup = 100,
+  iter = 5000,
+  warmup = 500,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/A_Model_Unique_STD_all_1000_Student_all_New_Extraction"
+  file = "Data/Model/A_Model_Unique_STD_all_5000_Student_all_New_Extraction_NoNutriRow"
 )
+
+plot(fit_all)
+
+conditional_effects(fit_all)
 
 ```
 
