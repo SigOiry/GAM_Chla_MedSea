@@ -314,12 +314,12 @@ fit_all <- brm(
   formula = GeoMean_Chla ~
     s(SST, by = Box) + 
     s(N_P, by = Box) +
-    s(SSS, by = Box) +
+    # s(SSS, by = Box) +
     # s(PO4, by = Box) +
     # s(NO3, by = Box) +
     # s(NH4, by = Box) +
     s(MLD, by = Box) +
-    s(HF, by = Box) +
+    # s(HF, by = Box) +
     s(sum_Nutri, by = Box),
   data = df_wide_STD,
   family = student(),
@@ -327,12 +327,17 @@ fit_all <- brm(
   iter = 5000,
   warmup = 500,
   control = list(adapt_delta = 0.97,  max_treedepth = 15),
-  file = "Data/Model/A_Model_Unique_STD_all_5000_Student_all_New_Extraction_NoNutriRow"
+  file = "Data/Model/A_Model_Unique_STD_all_5000_Student_all_New_Extraction_NoNutriRow_cleaned"
 )
-
+# 
 # plot(fit_all)
+# 
+conditional_effects(fit_all)
 
-# conditional_effects(fit_all)
+ggplot(df_wide_all, aes(y = GeoMean_Chla, x = MLD, color = Box))+
+  geom_point()+
+  # xlim(c(0,200))+
+  facet_wrap(~ Box, scales = "free_x")
 
 ```
 
@@ -657,7 +662,8 @@ conditional_Plot_N_P_df<-NewData_N_P_brms%>%
            ymin = case_when(Box == "Adriatic" ~ 2 * mean(ymin) - ymin,
                          T ~ ymin),
            ymax = case_when(Box == "Adriatic" ~ 2 * mean(ymax) - ymax,
-                         T ~ ymin)) 
+                         T ~ ymax)
+           ) 
 
 conditional_Plot_N_P <- conditional_Plot_N_P_df %>% 
   # ungroup() %>% 
@@ -774,7 +780,8 @@ conditional_Plot_sum_Nutri_df<-NewData_sum_Nutri_brms%>%
              pull(sd)+
              df_back_to_raw %>% 
              dplyr::filter(metrics == "sum_Nutri") %>% 
-             pull(avg)) 
+             pull(avg)
+           ) 
 
 conditional_Plot_sum_Nutri <- conditional_Plot_sum_Nutri_df %>% 
   # ungroup() %>% 
@@ -784,7 +791,6 @@ conditional_Plot_sum_Nutri <- conditional_Plot_sum_Nutri_df %>%
   geom_line(aes(color = Box),size = 1)+
   facet_wrap(~Box, scales = "free_x")+
     scale_colour_manual(values = colscale)+
-  facet_wrap(~Box, scales = "free_x")+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("Sum of Nutrient (mmol.m⁻³)")+
   theme_bw()
@@ -1002,13 +1008,13 @@ mutate(.linpred=(.linpred * df_back_to_raw %>%
 
 conditional_Plot_MLD_df<-NewData_MLD_brms%>%
   group_by(Box,MLD)%>%
-  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>%
-    mutate(MLD = MLD*df_back_to_raw %>% 
-             dplyr::filter(metrics == "MLD") %>% 
+  reframe(tidybayes::median_qi(.linpred,.width=c(0.80))) %>% 
+    mutate(MLD = MLD*df_back_to_raw %>%
+             dplyr::filter(metrics == "MLD") %>%
              pull(sd)+
-             df_back_to_raw %>% 
-             dplyr::filter(metrics == "MLD") %>% 
-             pull(avg)) 
+             df_back_to_raw %>%
+             dplyr::filter(metrics == "MLD") %>%
+             pull(avg))
 
 conditional_Plot_MLD <- conditional_Plot_MLD_df %>% 
   # ungroup() %>% 
