@@ -332,12 +332,12 @@ fit_all <- brm(
 # 
 # plot(fit_all)
 # 
-conditional_effects(fit_all)
-
-ggplot(df_wide_all, aes(y = GeoMean_Chla, x = MLD, color = Box))+
-  geom_point()+
-  # xlim(c(0,200))+
-  facet_wrap(~ Box, scales = "free_x")
+# conditional_effects(fit_all)
+# 
+# ggplot(df_wide_all, aes(y = GeoMean_Chla, x = MLD, color = Box))+
+#   geom_point()+
+#   # xlim(c(0,200))+
+#   facet_wrap(~ Box, scales = "free_x")
 
 ```
 
@@ -656,15 +656,8 @@ conditional_Plot_N_P_df<-NewData_N_P_brms%>%
              pull(sd)+
              df_back_to_raw %>% 
              dplyr::filter(metrics == "N_P") %>% 
-             pull(avg),
-           y = case_when(Box == "Adriatic" ~ 2 * mean(y) - y,
-                         T ~ y),
-           ymin = case_when(Box == "Adriatic" ~ 2 * mean(ymin) - ymin,
-                         T ~ ymin),
-           ymax = case_when(Box == "Adriatic" ~ 2 * mean(ymax) - ymax,
-                         T ~ ymax)
+             pull(avg)
            ) 
-
 conditional_Plot_N_P <- conditional_Plot_N_P_df %>% 
   # ungroup() %>% 
   # pivot_longer(c(N_P,N_P,sum_Nutri), names_to = "metrics", values_to = "values") %>% 
@@ -996,7 +989,7 @@ NewData_MLD <- rbind(NewData_Cyprus_MLD,NewData_Lyon_MLD,NewData_Adriatic_MLD) %
   mutate(Box = as.factor(Box))
 
 NewData_MLD_brms<-NewData_MLD %>%
-tidybayes::add_linpred_draws(fit_all, ndraws=2000) %>%
+tidybayes::add_linpred_draws(fit_all, ndraws=10000) %>%
 mutate(.linpred=(.linpred * df_back_to_raw %>% 
                    dplyr::filter(metrics == "GeoMean_Chla") %>% 
                    pull(sd))+
@@ -1024,7 +1017,6 @@ conditional_Plot_MLD <- conditional_Plot_MLD_df %>%
   geom_line(aes(color = Box),size = 1)+
   facet_wrap(~Box, scales = "free_x")+
     scale_colour_manual(values = colscale)+
-  facet_wrap(~Box, scales = "free_x")+
     ylab("Chla Concentration (mg.m⁻³)")+
     xlab("MLD (m)")+
   theme_bw()
@@ -1157,10 +1149,15 @@ write.csv(conditional_Plot_MLD_df, "Outputs/Conditional_plots/MLD.csv",row.names
 #| eval: false
 
 # Combine into a 3x3 layout
-combined_plot <- (conditional_Plot_SST + conditional_Plot_N_P) / (conditional_Plot_sum_Nutri + conditional_Plot_SSS) / (conditional_Plot_MLD + conditional_Plot_HF )+ 
+# combined_plot <- (conditional_Plot_SST + conditional_Plot_N_P) / (conditional_Plot_sum_Nutri + conditional_Plot_SSS) / (conditional_Plot_MLD + conditional_Plot_HF )+ 
+#   plot_layout(guides = "collect") & 
+#   theme(aspect.ratio = 1) &
+#   theme(legend.position = "top")# Makes each panel square
+
+combined_plot <- (conditional_Plot_SST / conditional_Plot_sum_Nutri/ conditional_Plot_N_P) + 
   plot_layout(guides = "collect") & 
   theme(aspect.ratio = 1) &
-  theme(legend.position = "top")# Makes each panel square
+  theme(legend.position = "top")
 
 # Show plot
 combined_plot
