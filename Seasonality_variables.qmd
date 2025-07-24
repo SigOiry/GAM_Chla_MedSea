@@ -487,7 +487,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
       Metric == "GeoMean_Chla" ~ "bold('Chlorophyll-a'~(mg%.%m^{-3}))",
       Metric == "MLD" ~ "bold('MLD (m)')",
       Metric == "NPratio" ~ "NO3:PO4",
-      Metric == "TotalNutrient" ~ "Total Nutrient",
+      Metric == "TotalNutrient" ~ "bold('Total Nutrient'~(mmol%.%m^{-3}))",
       Metric == "SST" ~ "bold('SST (°C)')",
       TRUE ~ Metric
     ),
@@ -516,7 +516,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
   geom_linerange(aes(ymin = p25, ymax = p75), linewidth = .8) +
 
      # keep your smooth
-  facet_wrap(~Metric , ncol = 3,scales = "free") +
+  facet_wrap(~Metric , ncol = 3,scales = "free",labeller = label_parsed) +
   scale_colour_manual(values = colscale) +
   scale_x_continuous(
     breaks = seq(0, 345, by = 60),
