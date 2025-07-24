@@ -1163,7 +1163,7 @@ combined_plot <- (conditional_Plot_SST / conditional_Plot_sum_Nutri/ conditional
 combined_plot
 
 
-ggsave("Outputs/plot_all_variable_per_Box.png", height = 5.25, width = 10, unit = "in", dpi = 300)
+ggsave("Outputs/plot_all_variable_per_Box.png", height = 10, width = 8.15, unit = "in", dpi = 300)
 ```
 
 ```{r zip outputs}
