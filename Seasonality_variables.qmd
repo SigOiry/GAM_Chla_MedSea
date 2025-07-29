@@ -255,7 +255,10 @@ df <- df_chla %>%
   pivot_longer(-c(Date,Box), names_to = "Metric", values_to = "Value") %>% 
   group_by(Metric, Box) %>% 
   mutate(Value = scales::squish(Value, c(stats::quantile(Value, probs = 0.01),stats::quantile(Value, probs = 0.99)))) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(Box = case_when(Box == "Lyon" ~ "Box 1",
+                         Box == "Adriatic" ~ "Box 2",
+                         T ~ "Box 3"))
 
 
 write.csv(df,"Data/df.all.csv", row.names = F)
@@ -288,7 +291,7 @@ df_wide <- df %>%
 #| out-width: "99%"
 #| fig-height: 10
 
-colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
+colscale <- c("Box 2" = "#4F8EB1","Box 1" = "#F6F9A0","Box 3" = "#223F8D")
 
 df %>% 
   dplyr::filter(Metric != "STD_Chla",
@@ -312,7 +315,7 @@ df %>%
 
 library(tidyverse)
 
-colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
+colscale <- c("Box 2" = "#4F8EB1","Box 1" = "#F6F9A0","Box 3" = "#223F8D")
 
 # bin_size <- 10        # days per bin  (change to 30 for months, etc.)
 
@@ -322,7 +325,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
     day      = yday(Date),
     # bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,
     Metric = case_when(
-      Metric == "GeoMean_Chla" ~ "bold('Chlorophyll-a'~(mg%.%m^{-3}))",
+      Metric == "GeoMean_Chla" ~ "bold('A) Chlorophyll-a'~(mg%.%m^{-3}))",
       Metric == "MLD" ~ "bold('MLD (m)')",
       Metric == "NPratio" ~ "NO3:PO4",
       Metric == "TotalNutrient" ~ "Total Nutrient",
@@ -379,7 +382,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
       Metric == "MLD" ~ "bold('MLD (m)')",
       Metric == "NPratio" ~ "NO3:PO4",
       Metric == "TotalNutrient" ~ "Total Nutrient",
-      Metric == "SST" ~ "SST (°C)",
+      Metric == "SST" ~ "B) SST (°C)",
       TRUE ~ Metric
     ),
     day = case_when(day == 61 ~ 60,
@@ -430,7 +433,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
     # bin      = (day - 1) %/% bin_size * bin_size + bin_size/2,
     Metric = case_when(
       Metric == "GeoMean_Chla" ~ "bold('Chlorophyll-a'~(mg%.%m^{-3}))",
-      Metric == "MLD" ~ "MLD (m)",
+      Metric == "MLD" ~ "C) MLD (m)",
       Metric == "NPratio" ~ "NO3:PO4",
       Metric == "TotalNutrient" ~ "Total Nutrient",
       Metric == "SST" ~ "bold('SST (°C)')",
@@ -487,7 +490,7 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
       Metric == "GeoMean_Chla" ~ "bold('Chlorophyll-a'~(mg%.%m^{-3}))",
       Metric == "MLD" ~ "bold('MLD (m)')",
       Metric == "NPratio" ~ "NO3:PO4",
-      Metric == "TotalNutrient" ~ "bold('Total Nutrient'~(mmol%.%m^{-3}))",
+      Metric == "TotalNutrient" ~ "bold('D)  Sum of Nutrients'~(mmol%.%m^{-3}))",
       Metric == "SST" ~ "bold('SST (°C)')",
       TRUE ~ Metric
     ),
@@ -540,8 +543,8 @@ colscale <- c("Adriatic" = "#4F8EB1","Lyon" = "#F6F9A0","Cyprus" = "#223F8D")
     Metric = case_when(
       Metric == "GeoMean_Chla" ~ "bold('Chlorophyll-a'~(mg%.%m^{-3}))",
       Metric == "MLD" ~ "bold('MLD (m)')",
-      Metric == "NPratio" ~ "NO3:PO4",
-      Metric == "TotalNutrient" ~ "Total Nutrient",
+      Metric == "NPratio" ~ "E) NO3:PO4",
+      Metric == "TotalNutrient" ~ "E) Sum of Nutrients",
       Metric == "SST" ~ "bold('SST (°C)')",
       TRUE ~ Metric
     ),
@@ -591,7 +594,8 @@ combined_plot <- (plot_seas_Chla + plot_seas_SST + plot_seas_MLD) / (plot_seas_N
   theme(aspect.ratio = 1) &
   theme(legend.position = "top",
     legend.text       = element_text(size = 14),   # size of legend labels
-    legend.title      = element_text(size = 20),   # size of legend title
+    # legend.title      = element_text(size = 20),   # size of legend title
+    legend.title      = element_blank(),
     legend.key.size   = unit(2, "lines") )
 
 # Show plot
